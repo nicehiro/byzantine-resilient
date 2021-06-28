@@ -1,0 +1,6 @@
+* Byzantine Resilient
+
+** Requirements
+1. Distributed data parallel training.
+2. Give a topology to train the model.
+3. Give a method to defense byzantine attacks. 
