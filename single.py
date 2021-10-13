@@ -1,8 +1,7 @@
 # single thread
 from worker import Worker
 from gar import average
-from topology import Topology
-from data import DataDistributor
+from data import generate_dataloader
 import torch.nn.functional as F
 
 
@@ -11,10 +10,11 @@ attacks = [None]
 
 
 def train(dataset):
-    data_distributor = DataDistributor("data", dataset, 64, 1)
-    data_distributor.distribute()
-    train_loaders = data_distributor.train_loaders
-    test_loader = data_distributor.test_loader
+    # data_distributor = DataDistributor("data", dataset, 64, 1)
+    # data_distributor.distribute()
+    # train_loaders = data_distributor.train_loaders
+    # test_loader = data_distributor.test_loader
+    train_loaders, test_loader = generate_dataloader(dataset, 1, 64)
     worker = Worker(
         0, meta_lr=1e-3, gar=average, attack=None, criterion=F.cross_entropy
     )
@@ -37,4 +37,4 @@ def train(dataset):
 
 
 if __name__ == "__main__":
-    train("CIFAR")
+    train("CIFAR10")

@@ -1,6 +1,6 @@
+from data import generate_dataloader
 from gar import average
 from worker import Worker
-from data import DataDistributor
 
 
 class Topology:
@@ -14,16 +14,16 @@ class Topology:
     def build_topo(self):
         # init worker
         for i in range(self.size):
-            worker = Worker(i, 1e-3, average, self.attacks[i])
+            worker = Worker(i, average, self.attacks[i])
             self.workers.append(worker)
         # build edges
         for i in range(self.size):
             for j in range(self.size):
                 if self.adj_matrix[i][j] == 1:
-                    self.workers[i].neighbors.append(j)
+                    self.workers[i].neighbors_id.append(j)
                     self.workers[i].neighbors.append(self.workers[j])
 
-    def set_dataset(self, dataset, path, batch_size):
+    def set_dataset(self, dataset, path, batch_size, meta_lr=1e-3):
         """Set dataset and distribute data to each worker.
 
         Args:
@@ -31,12 +31,11 @@ class Topology:
             path (str): dataset path
             batch_size (int): dataset batch size
         """
-        data_distributor = DataDistributor(path, dataset, batch_size, self.size)
-        data_distributor.distribute()
-        train_loaders = data_distributor.train_loaders
-        test_loader = data_distributor.test_loader
+        train_loaders, test_loader = generate_dataloader(
+            dataset, self.size, batch_size=batch_size
+        )
         for i, worker in enumerate(self.workers):
-            worker.set_dataset(dataset, train_loaders[i], test_loader)
+            worker.set_dataset(dataset, train_loaders[i], test_loader, meta_lr)
 
     def communicate(self):
         """Communicate grads among all connected worker."""

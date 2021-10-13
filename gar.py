@@ -1,4 +1,4 @@
-import numpy as np
+import torch
 
 
 def average(grads):
@@ -7,4 +7,6 @@ def average(grads):
     Args:
         grads (List[]): all received grads
     """
-    return np.average(grads)
+    all = torch.cat(grads, axis=1)
+    m = torch.mean(all, axis=1)
+    return m.unsqueeze(dim=-1)
