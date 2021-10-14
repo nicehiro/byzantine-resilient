@@ -32,7 +32,9 @@ def split_dataset(dataset_name, workers_n):
     dataset = datasets[dataset_name](
         root="./data", train=True, download=True, transform=transforms[dataset_name]
     )
-    lengths = [len(dataset) // workers_n] * workers_n
+    ave = len(dataset) // workers_n
+    lengths = [ave] * (workers_n - 1)
+    lengths.append(len(dataset) - ave * (workers_n - 1))
     return random_split(dataset, lengths)
 
 

@@ -1,3 +1,4 @@
+from torch import optim
 from topology import Topology
 from worker import Worker
 from gar import *
@@ -14,10 +15,10 @@ adj_matrix = [
 attacks = [None] * len(adj_matrix)
 
 
-def train(dataset):
+def train(dataset, batch_size, meta_lr):
     topo = Topology(adj_matrix, attacks)
     topo.build_topo()
-    topo.set_dataset(dataset, "data", 64, meta_lr=1e-3)
+    topo.set_dataset(dataset, batch_size, meta_lr)
     ps = topo.workers[0]
 
     for epoch in range(10000):
@@ -33,4 +34,7 @@ def train(dataset):
 
 
 if __name__ == "__main__":
-    train("MNIST")
+    dataset = "MNIST"
+    batch_size = 64
+    meta_lr = 1e-3
+    train(dataset, batch_size, meta_lr)

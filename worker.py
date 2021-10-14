@@ -1,12 +1,13 @@
 from functools import reduce
 from operator import mul
+from torch import optim
 
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 
 from models import CIFAR10, MNIST
-from utils import CUDA, collect_grads
+from utils import CUDA, collect_grads, set_grads
 
 
 class Worker:
@@ -24,12 +25,15 @@ class Worker:
         self.neighbors = []
         self.neighbors_id = []
 
-    def set_dataset(self, dataset, train_loader, test_loader, meta_lr=1e-3):
+    def set_dataset(self, dataset, train_loader, test_loader):
         self.meta_model = CUDA(self.meta_models[dataset]())
         self._train_loader = train_loader
         self._train_iter = iter(self._train_loader)
         self._test_loader = test_loader
-        self.meta_lr = meta_lr
+        # self.meta_lr = meta_lr
+
+    def set_optimizer(self, optimizer):
+        self.optimizer = optimizer
 
     def submit(self):
         assert self.meta_model is not None
@@ -55,12 +59,14 @@ class Worker:
 
     def meta_update(self):
         """Update meta model."""
-        flat_params = self.get_meta_model_flat_params().unsqueeze(-1)
+        # flat_params = self.get_meta_model_flat_params().unsqueeze(-1)
         self_grad, loss = self._normal_grad()
         # update meta network using linear GAR
         grad = self.gar(self.grads + [self_grad])
-        flat_params -= self.meta_lr * grad
-        self.set_meta_model_flat_params(flat_params)
+        set_grads(self.meta_model, grad)
+        self.optimizer.step()
+        # flat_params -= self.meta_lr * grad
+        # self.set_meta_model_flat_params(flat_params)
         return loss
 
     def meta_test(self):
