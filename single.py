@@ -18,6 +18,7 @@ def train(dataset, batch_size, meta_lr=1e-3):
     worker = Worker(0, gar=average, attack=None, criterion=F.cross_entropy)
     worker.set_dataset(dataset, train_loaders[0], test_loader)
     optimizer = optim.Adam(worker.meta_model.parameters(), lr=meta_lr)
+    # optimizer = optim.SGD(worker.meta_model.parameters(), lr=1e-1, weight_decay=0.0001)
     worker.set_optimizer(optimizer)
 
     for epoch in range(10000):

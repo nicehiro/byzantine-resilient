@@ -4,7 +4,9 @@ from operator import mul
 
 
 def CUDA(var):
-    return var.cuda() if torch.cuda.is_available() else var
+    """Turn var to cuda device if cuda is available."""
+    # return var.cuda() if torch.cuda.is_available() else var
+    return var
 
 
 def collect_grads(model, loss):
