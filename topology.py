@@ -5,7 +5,7 @@ from worker import Worker
 
 
 class Topology:
-    def __init__(self, adj_matrix, attacks) -> None:
+    def __init__(self, adj_matrix, attacks, test_ranks=[0]) -> None:
         self.adj_matrix = adj_matrix
         self.attacks = attacks
         assert len(self.adj_matrix) == len(self.attacks)
