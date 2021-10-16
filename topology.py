@@ -12,37 +12,27 @@ class Topology:
         self.size = len(self.attacks)
         self.workers = []
 
-    def build_topo(self):
+    def build_topo(self, dataset, batch_size):
+        train_loaders, test_loader = generate_dataloader(
+            dataset, self.size, batch_size=batch_size
+        )
         # init worker
-        for i in range(self.size):
-            worker = Worker(i, average, self.attacks[i])
+        for rank in range(self.size):
+            worker = Worker(
+                rank,
+                self.size,
+                average,
+                self.attacks[rank],
+                meta_lr=1e-3,
+                train_loader=train_loaders[rank],
+                test_loader=test_loader,
+                dataset=dataset,
+            )
             self.workers.append(worker)
         # build edges
         for i in range(self.size):
             for j in range(self.size):
                 if self.adj_matrix[i][j] == 1:
-                    self.workers[i].neighbors_id.append(j)
-                    self.workers[i].neighbors.append(self.workers[j])
-
-    def set_dataset(self, dataset, batch_size, meta_lr=1e-3):
-        """Set dataset and distribute data to each worker.
-
-        Args:
-            dataset (str): dataset name
-            path (str): dataset path
-            batch_size (int): dataset batch size
-        """
-        train_loaders, test_loader = generate_dataloader(
-            dataset, self.size, batch_size=batch_size
-        )
-        for i, worker in enumerate(self.workers):
-            worker.set_dataset(dataset, train_loaders[i], test_loader)
-            optimizer = optim.Adam(worker.meta_model.parameters(), meta_lr)
-            worker.set_optimizer(optimizer)
-
-    def communicate(self):
-        """Communicate grads among all connected worker."""
-        for worker in self.workers:
-            for neighbor in worker.neighbors:
-                grad = neighbor.submit()
-                worker.grads.append(grad)
+                    # self.workers[i].neighbors_id.append(j)
+                    self.workers[i].src.append(j)
+                    self.workers[j].dst.append(i)

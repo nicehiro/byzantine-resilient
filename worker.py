@@ -1,73 +1,90 @@
+import os
 from functools import reduce
 from operator import mul
-from torch import optim
 
 import torch
+import torch.distributed as dist
 import torch.nn.functional as F
+from torch import optim
 from torch.autograd import Variable
+from torch.multiprocessing import Process
 
 from models import CIFAR10, MNIST
 from utils import CUDA, collect_grads, set_grads
+import logging
 
 
-class Worker:
+class Worker(Process):
     meta_models = {"MNIST": MNIST, "CIFAR10": CIFAR10}
+    # grad_shape = {"MNIST": (25450, 1), "CIFAR10": (62006, 1)}
+    MASTER_ADDR = "127.0.0.1"
+    MASTER_PORT = "29500"
 
-    def __init__(self, id, gar, attack, criterion=F.cross_entropy) -> None:
-        self.id = id
+    def __init__(
+        self,
+        rank,
+        size,
+        gar,
+        attack,
+        meta_lr,
+        train_loader,
+        test_loader,
+        dataset="MNIST",
+        criterion=F.cross_entropy,
+        epochs=100,
+    ) -> None:
+        super().__init__()
+        self.rank = rank
+        self.size = size
         self.gar = gar
         self.attack = attack
         self.criterion = criterion
-        self.meta_model = None
-        # grads buffer to contain all grads value
-        self.grads = []
-        # neighbors buffer to contain all neighbors
-        self.neighbors = []
-        self.neighbors_id = []
-
-    def set_dataset(self, dataset, train_loader, test_loader):
-        self.meta_model = CUDA(self.meta_models[dataset]())
         self._train_loader = train_loader
-        self._train_iter = iter(self._train_loader)
         self._test_loader = test_loader
-        # self.meta_lr = meta_lr
+        self.dataset = dataset
+        # self._train_iter = iter(self._train_loader)
+        self.meta_model = CUDA(self.meta_models[self.dataset]())
+        self.optimizer = optim.Adam(self.meta_model.parameters(), lr=meta_lr)
+        # others -> self
+        self.src = []
+        # self -> others
+        self.dst = []
+        # training params
+        self.epochs = epochs
 
-    def set_optimizer(self, optimizer):
-        self.optimizer = optimizer
-
-    def submit(self):
-        assert self.meta_model is not None
-        return (
-            self._normal_grad()[0].detach()
-            if not self.attack
-            else self.attack().detach()
-        )
-
-    def _normal_grad(self):
-        """Train the model, get gradients and loss."""
-        try:
-            x, y = self._train_iter.next()
-        except StopIteration:
-            print("One episodes training finished.")
-            self._train_iter = iter(self._train_loader)
-            x, y = self._train_iter.next()
-        x, y = Variable(x), Variable(y)
-        x, y = CUDA(x), CUDA(y)
-        predict_y = self.meta_model(x)
-        loss = self.criterion(predict_y, y)
-        return collect_grads(self.meta_model, loss), loss
-
-    def meta_update(self):
-        """Update meta model."""
-        # flat_params = self.get_meta_model_flat_params().unsqueeze(-1)
-        self_grad, loss = self._normal_grad()
-        # update meta network using linear GAR
-        grad = self.gar(self.grads + [self_grad])
-        set_grads(self.meta_model, grad)
-        self.optimizer.step()
-        # flat_params -= self.meta_lr * grad
-        # self.set_meta_model_flat_params(flat_params)
-        return loss
+    def run(self) -> None:
+        # logging.basicConfig(level=logging.INFO)
+        num_batches = len(self._train_loader.dataset) // float(64)
+        os.environ["MASTER_ADDR"] = self.MASTER_ADDR
+        os.environ["MASTER_PORT"] = self.MASTER_PORT
+        dist.init_process_group(backend="gloo", rank=self.rank, world_size=self.size)
+        # group = dist.new_group(self.src)
+        for epoch in range(self.epochs):
+            epoch_loss = 0
+            for data, target in self._train_loader:
+                data, target = CUDA(Variable(data)), CUDA(Variable(target))
+                self.optimizer.zero_grad()
+                predict_y = self.meta_model(data)
+                loss = self.criterion(predict_y, target)
+                epoch_loss += loss.item()
+                # get self grad
+                grad = collect_grads(self.meta_model, loss)
+                # contain all grads received from other worker
+                grads = [torch.zeros_like(grad)] * len(self.src)
+                # send/recv grads to/from neighbors
+                for d in self.dst:
+                    dist.send(tensor=grad, dst=d)
+                    logging.info(f"Rank {self.rank} send grad to {d}")
+                for i, s in enumerate(self.src):
+                    dist.recv(tensor=grads[i], src=s)
+                    logging.info(f"Rank {self.rank} receive grad from {s}")
+                grad = self.gar(grads + [grad])
+                set_grads(self.meta_model, grad)
+                self.optimizer.step()
+            acc = self.meta_test()
+            logging.critical(
+                f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}\tAcc {acc}"
+            )
 
     def meta_test(self):
         """Test the model."""
