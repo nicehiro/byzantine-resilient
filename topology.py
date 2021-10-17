@@ -5,11 +5,12 @@ from worker import Worker
 
 
 class Topology:
-    def __init__(self, adj_matrix, attacks) -> None:
+    def __init__(self, adj_matrix, attacks, test_ranks=[0]) -> None:
         self.adj_matrix = adj_matrix
         self.attacks = attacks
         assert len(self.adj_matrix) == len(self.attacks)
         self.size = len(self.attacks)
+        self.test_ranks = test_ranks
         self.workers = []
 
     def build_topo(self, dataset, batch_size):
@@ -23,6 +24,7 @@ class Topology:
                 self.size,
                 average,
                 self.attacks[rank],
+                test_ranks=self.test_ranks,
                 meta_lr=1e-3,
                 train_loader=train_loaders[rank],
                 test_loader=test_loader,

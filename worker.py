@@ -18,7 +18,7 @@ class Worker(Process):
     meta_models = {"MNIST": MNIST, "CIFAR10": CIFAR10}
     # grad_shape = {"MNIST": (25450, 1), "CIFAR10": (62006, 1)}
     MASTER_ADDR = "127.0.0.1"
-    MASTER_PORT = "29500"
+    MASTER_PORT = "29600"
 
     def __init__(
         self,
@@ -26,12 +26,14 @@ class Worker(Process):
         size,
         gar,
         attack,
+        test_ranks,
         meta_lr,
         train_loader,
         test_loader,
         dataset="MNIST",
         criterion=F.cross_entropy,
         epochs=100,
+        weight_decay=5e-4,
     ) -> None:
         super().__init__()
         self.rank = rank
@@ -44,7 +46,10 @@ class Worker(Process):
         self.dataset = dataset
         # self._train_iter = iter(self._train_loader)
         self.meta_model = CUDA(self.meta_models[self.dataset]())
-        self.optimizer = optim.Adam(self.meta_model.parameters(), lr=meta_lr)
+        self.optimizer = optim.Adam(
+            self.meta_model.parameters(), lr=meta_lr, weight_decay=weight_decay
+        )
+        self.test_ranks = test_ranks
         # others -> self
         self.src = []
         # self -> others
@@ -54,12 +59,17 @@ class Worker(Process):
 
     def run(self) -> None:
         # logging.basicConfig(level=logging.INFO)
+        logging.critical(f"Rank {self.rank}\t Neighbors {self.src}")
         num_batches = len(self._train_loader.dataset) // float(64)
         os.environ["MASTER_ADDR"] = self.MASTER_ADDR
         os.environ["MASTER_PORT"] = self.MASTER_PORT
         dist.init_process_group(backend="gloo", rank=self.rank, world_size=self.size)
-        # group = dist.new_group(self.src)
+        # src_group = dist.new_group(self.src)
+        # dst_group = dist.new_group(self.dst)
         for epoch in range(self.epochs):
+            if self.rank in self.test_ranks:
+                acc = self.meta_test()
+                logging.critical(f"Rank {dist.get_rank()}\tAcc {acc}")
             epoch_loss = 0
             for data, target in self._train_loader:
                 data, target = CUDA(Variable(data)), CUDA(Variable(target))
@@ -78,12 +88,13 @@ class Worker(Process):
                 for i, s in enumerate(self.src):
                     dist.recv(tensor=grads[i], src=s)
                     logging.info(f"Rank {self.rank} receive grad from {s}")
+                # dist.broadcast(grad, self.rank, dst_group)
+                # dist.gather(grad, grads, self.rank, src_group)
                 grad = self.gar(grads + [grad])
                 set_grads(self.meta_model, grad)
                 self.optimizer.step()
-            acc = self.meta_test()
             logging.critical(
-                f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}\tAcc {acc}"
+                f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
 
     def meta_test(self):
