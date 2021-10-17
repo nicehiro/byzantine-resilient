@@ -6,13 +6,11 @@ from topology import Topology
 import argparse
 
 # centralization matrix
-centra_matrix = [
-    [0, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-]
+def generate_centra_matrix(workers_n):
+    return [[0] + [1] * (workers_n - 1)] + [
+        [0] * workers_n for _ in range(workers_n - 1)
+    ]
+
 
 # decentralization matrix
 decentra_matrix = [
@@ -45,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("--meta_lr", type=float, default=1e-3)
     args = parser.parse_args()
 
-    adj_matrix = centra_matrix
+    adj_matrix = generate_centra_matrix(workers_n=5)
     attacks = [None] * len(adj_matrix)
     test_ranks = [0]
     train(
