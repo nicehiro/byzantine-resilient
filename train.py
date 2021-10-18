@@ -14,11 +14,11 @@ def generate_centra_matrix(workers_n):
 
 # decentralization matrix
 decentra_matrix = [
-    [0, 0, 0, 1, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 0, 0, 0],
     [0, 1, 1, 0, 0],
-    [0, 0, 1, 1, 0],
+    [1, 0, 1, 0, 0],
+    [1, 1, 0, 1, 0],
+    [1, 0, 1, 0, 1],
+    [1, 0, 0, 1, 0],
 ]
 
 
@@ -41,11 +41,17 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="MNIST")
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--meta_lr", type=float, default=1e-3)
+    parser.add_argument("--workers_n", type=int, default=5)
+    parser.add_argument("--centra", type=bool, default=False)
     args = parser.parse_args()
 
-    adj_matrix = generate_centra_matrix(workers_n=5)
+    adj_matrix = (
+        generate_centra_matrix(workers_n=args.workers_n)
+        if args.centra
+        else decentra_matrix
+    )
     attacks = [None] * len(adj_matrix)
-    test_ranks = [0]
+    test_ranks = [0, 1, 2, 3, 4]
     train(
         args.dataset,
         args.batch_size,
