@@ -18,13 +18,13 @@ class Worker(Process):
     meta_models = {"MNIST": MNIST, "CIFAR10": CIFAR10}
     # grad_shape = {"MNIST": (25450, 1), "CIFAR10": (62006, 1)}
     MASTER_ADDR = "127.0.0.1"
-    MASTER_PORT = "29901"
+    MASTER_PORT = "29903"
 
     def __init__(
         self,
         rank,
         size,
-        gar,
+        par,
         attack,
         test_ranks,
         meta_lr,
@@ -38,7 +38,7 @@ class Worker(Process):
         super().__init__()
         self.rank = rank
         self.size = size
-        self.gar = gar
+        self.par = par
         self.attack = attack
         self.criterion = criterion
         self._train_loader = train_loader
@@ -60,15 +60,11 @@ class Worker(Process):
     def run(self) -> None:
         # logging.basicConfig(level=logging.INFO)
         logging.critical(f"Rank {self.rank}\t Neighbors {self.src}")
+        # worker process setting
         num_batches = len(self._train_loader.dataset) // float(64)
         os.environ["MASTER_ADDR"] = self.MASTER_ADDR
         os.environ["MASTER_PORT"] = self.MASTER_PORT
         dist.init_process_group(backend="gloo", rank=self.rank, world_size=self.size)
-        dst_group, src_group = None, None
-        if len(self.dst) != 0:
-            dst_group = dist.new_group(self.dst)
-        if len(self.src) != 0:
-            src_group = dist.new_group(self.src)
         for epoch in range(self.epochs):
             if self.rank in self.test_ranks:
                 acc = self.meta_test()
@@ -80,24 +76,35 @@ class Worker(Process):
                 predict_y = self.meta_model(data)
                 loss = self.criterion(predict_y, target)
                 epoch_loss += loss.item()
-                # get self grad
+                # get current model's params
+                params = self.get_meta_model_flat_params()
+                params_list = [torch.zeros_like(params)] * len(self.src)
                 grad = collect_grads(self.meta_model, loss)
-                # contain all grads received from other worker
-                grads = [torch.zeros_like(grad)] * len(self.src)
-                # send/recv grads to/from neighbors
-                # for d in self.dst:
-                #     dist.send(tensor=grad, dst=d)
-                #     logging.info(f"Rank {self.rank} send grad to {d}")
-                # for i, s in enumerate(self.src):
-                #     dist.recv(tensor=grads[i], src=s)
-                #     logging.info(f"Rank {self.rank} receive grad from {s}")
-                if dst_group is not None:
-                    dist.broadcast(grad, self.rank, dst_group)
-                if src_group is not None:
-                    dist.gather(grad, grads, self.rank, src_group)
-                grad = self.gar(grads + [grad])
-                set_grads(self.meta_model, grad)
-                self.optimizer.step()
+                reqs = []
+                if self.attack is not None:
+                    # byzantine worker receive params first then attack
+                    for i, s in enumerate(self.src):
+                        dist.recv(tensor=params_list[i], src=s)
+                        logging.info(f"Rank {self.rank} receive grad from {s}")
+                    # attack
+                    params = self.attack(params_list)
+                else:
+                    # non-byzantine worker don't need to sync the recv params
+                    for i, s in enumerate(self.src):
+                        req2 = dist.irecv(tensor=params_list[i], src=s)
+                        logging.info(f"Rank {self.rank} receive grad from {s}")
+                        reqs.append(req2)
+                for d in self.dst:
+                    req1 = dist.isend(tensor=params, dst=d)
+                    logging.info(f"Rank {self.rank} send grad to {d}")
+                    reqs.append(req1)
+                for req in reqs:
+                    req.wait()
+                if self.attack is None:
+                    params = self.par(params_list)
+                    self.set_meta_model_flat_params(params)
+                    set_grads(self.meta_model, grad)
+                    self.optimizer.step()
             logging.critical(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )

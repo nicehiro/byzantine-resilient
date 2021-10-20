@@ -1,17 +1,16 @@
-from torch import optim
 from data import generate_dataloader
-from gar import average
 from worker import Worker
 
 
 class Topology:
-    def __init__(self, adj_matrix, attacks, test_ranks=[0]) -> None:
+    def __init__(self, adj_matrix, attacks, par) -> None:
         self.adj_matrix = adj_matrix
         self.attacks = attacks
+        self.par = par
         assert len(self.adj_matrix) == len(self.attacks)
         self.size = len(self.attacks)
-        self.test_ranks = test_ranks
         self.workers = []
+        self.non_byzantines = [i for i, _ in enumerate(attacks) if attacks[i] is None]
 
     def build_topo(self, dataset, batch_size):
         train_loaders, test_loader = generate_dataloader(
@@ -22,9 +21,9 @@ class Topology:
             worker = Worker(
                 rank,
                 self.size,
-                average,
+                self.par,
                 self.attacks[rank],
-                test_ranks=self.test_ranks,
+                test_ranks=self.non_byzantines,
                 meta_lr=1e-3,
                 train_loader=train_loaders[rank],
                 test_loader=test_loader,
