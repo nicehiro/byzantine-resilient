@@ -1,8 +1,10 @@
 import os
 import torch
 import torch.distributed as dist
+from torch.distributed.distributed_c10d import recv
 from torch.multiprocessing import Process
 import threading
+import logging
 
 
 lock = threading.Lock()
@@ -10,21 +12,18 @@ lock = threading.Lock()
 
 def run(rank, size):
     tensor = torch.zeros(1)
-    rec_tensor = torch.zeros(1)
+    recv_list = [torch.zeros_like(tensor) for _ in range(2)]
 
     tensor += rank
     if rank == 0:
-        r1 = dist.isend(tensor=tensor, dst=1)
-        r2 = dist.irecv(tensor=rec_tensor, src=2)
-    elif rank == 1:
-        r1 = dist.isend(tensor=tensor, dst=2)
-        r2 = dist.irecv(tensor=rec_tensor, src=0)
+        tensor += 1
+        r1 = dist.send(tensor=tensor, dst=1, tag=1)
+        tensor += 1
+        r2 = dist.send(tensor=tensor, dst=1, tag=2)
     else:
-        r1 = dist.isend(tensor=tensor, dst=0)
-        r2 = dist.irecv(tensor=rec_tensor, src=1)
-    r1.wait()
-    r2.wait()
-    print("Rank ", rank, " has data ", rec_tensor)
+        r1 = dist.recv(tensor=recv_list[0], src=0, tag=1)
+        r2 = dist.recv(tensor=recv_list[1], src=0, tag=2)
+    logging.critical(f"Rank {rank} has data {recv_list}")
 
 
 def init_processes(rank, size, fn, backend="gloo"):
@@ -36,7 +35,7 @@ def init_processes(rank, size, fn, backend="gloo"):
 
 
 if __name__ == "__main__":
-    size = 3
+    size = 2
     processes = []
     torch.multiprocessing.set_start_method("spawn")
     for rank in range(size):

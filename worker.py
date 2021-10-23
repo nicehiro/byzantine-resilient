@@ -1,6 +1,5 @@
+import logging
 import os
-from functools import reduce
-from operator import mul
 
 import torch
 import torch.distributed as dist
@@ -10,21 +9,25 @@ from torch.autograd import Variable
 from torch.multiprocessing import Process
 
 from models import CIFAR10, MNIST
-from utils import CUDA, collect_grads, set_grads
-import logging
+from utils import (
+    CUDA,
+    collect_grads,
+    get_meta_model_flat_params,
+    set_grads,
+    set_meta_model_flat_params,
+)
 
 
 class Worker(Process):
     meta_models = {"MNIST": MNIST, "CIFAR10": CIFAR10}
     # grad_shape = {"MNIST": (25450, 1), "CIFAR10": (62006, 1)}
     MASTER_ADDR = "127.0.0.1"
-    MASTER_PORT = "29903"
+    MASTER_PORT = "29904"
 
     def __init__(
         self,
         rank,
         size,
-        par,
         attack,
         test_ranks,
         meta_lr,
@@ -38,7 +41,6 @@ class Worker(Process):
         super().__init__()
         self.rank = rank
         self.size = size
-        self.par = par
         self.attack = attack
         self.criterion = criterion
         self._train_loader = train_loader
@@ -56,10 +58,24 @@ class Worker(Process):
         self.dst = []
         # training params
         self.epochs = epochs
+        self.par = None
+
+    def construct_src_and_dst(self):
+        if self.attack is None:
+            # non-byzantine worker extend the dst
+            for rank in range(self.size):
+                if (rank not in self.dst) and (rank not in self.test_ranks):
+                    self.dst.append(rank)
+        else:
+            # byzantine worker clean the original src and extend the src
+            self.src = self.test_ranks
+            for rank in range(self.size):
+                if (rank in self.dst) and (rank not in self.test_ranks):
+                    self.dst.remove(rank)
 
     def run(self) -> None:
         # logging.basicConfig(level=logging.INFO)
-        logging.critical(f"Rank {self.rank}\t Neighbors {self.src}")
+        logging.critical(f"Rank {self.rank}\t SRC: {self.src}\t DST: {self.dst}")
         # worker process setting
         num_batches = len(self._train_loader.dataset) // float(64)
         os.environ["MASTER_ADDR"] = self.MASTER_ADDR
@@ -77,37 +93,40 @@ class Worker(Process):
                 loss = self.criterion(predict_y, target)
                 epoch_loss += loss.item()
                 # get current model's params
-                params = self.get_meta_model_flat_params()
-                params_list = [torch.zeros_like(params)] * len(self.src)
+                params = get_meta_model_flat_params(self.meta_model)
+                params_list = [torch.zeros_like(params) for _ in range(len(self.src))]
                 grad = collect_grads(self.meta_model, loss)
                 reqs = []
                 if self.attack is not None:
-                    # byzantine worker receive params first then attack
+                    # byzantine worker receive good worker params first then attack
                     for i, s in enumerate(self.src):
                         dist.recv(tensor=params_list[i], src=s)
-                        logging.info(f"Rank {self.rank} receive grad from {s}")
                     # attack
                     params = self.attack(params_list)
                 else:
                     # non-byzantine worker don't need to sync the recv params
                     for i, s in enumerate(self.src):
                         req2 = dist.irecv(tensor=params_list[i], src=s)
-                        logging.info(f"Rank {self.rank} receive grad from {s}")
                         reqs.append(req2)
                 for d in self.dst:
                     req1 = dist.isend(tensor=params, dst=d)
-                    logging.info(f"Rank {self.rank} send grad to {d}")
                     reqs.append(req1)
                 for req in reqs:
                     req.wait()
+                logging.info(f"Rank {self.rank} param {params}")
+                logging.info(f"Rank {self.rank} receive param {params_list}")
+
                 if self.attack is None:
-                    params = self.par(params_list)
-                    self.set_meta_model_flat_params(params)
+                    params = self.par.par(params, params_list)
+                    set_meta_model_flat_params(self.meta_model, params)
                     set_grads(self.meta_model, grad)
                     self.optimizer.step()
             logging.critical(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
+
+    def set_par(self, par):
+        self.par = par
 
     def meta_test(self):
         """Test the model."""
@@ -124,52 +143,3 @@ class Worker(Process):
                 correct += (predicted == labels).sum().item()
         self.meta_model.train()
         return correct / total
-
-    def get_meta_model_flat_params(self):
-        """
-        Get all meta_model parameters.
-        """
-        params = []
-        _queue = [self.meta_model]
-        while len(_queue) > 0:
-            cur = _queue[0]
-            _queue = _queue[1:]  # dequeue
-            if "weight" in cur._parameters:
-                params.append(cur._parameters["weight"].view(-1))
-            if "bias" in cur._parameters and not (cur._parameters["bias"] is None):
-                params.append(cur._parameters["bias"].view(-1))
-            for module in cur.children():
-                _queue.append(module)
-        return torch.cat(params)
-
-    def set_meta_model_flat_params(self, flat_params):
-        """
-        Restore original shapes (which is actually required during the training phase)
-        """
-        offset = 0
-        _queue = [self.meta_model]
-        while len(_queue) > 0:
-            cur = _queue[0]
-            _queue = _queue[1:]  # dequeue
-            weight_flat_size = 0
-            bias_flat_size = 0
-            if "weight" in cur._parameters:
-                weight_shape = cur._parameters["weight"].size()
-                weight_flat_size = reduce(mul, weight_shape, 1)
-                cur._parameters["weight"].data = flat_params[
-                    offset : offset + weight_flat_size
-                ].view(*weight_shape)
-                # cur._parameters["weight"].grad = torch.zeros(*weight_shape)
-            if "bias" in cur._parameters and not (cur._parameters["bias"] is None):
-                bias_shape = cur._parameters["bias"].size()
-                bias_flat_size = reduce(mul, bias_shape, 1)
-                cur._parameters["bias"].data = flat_params[
-                    offset
-                    + weight_flat_size : offset
-                    + weight_flat_size
-                    + bias_flat_size
-                ].view(*bias_shape)
-                # cur._parameters["bias"].grad = torch.zeros(*bias_shape)
-            offset += weight_flat_size + bias_flat_size
-            for module in cur.children():
-                _queue.append(module)

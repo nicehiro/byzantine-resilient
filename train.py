@@ -2,6 +2,8 @@ import torch
 from attacks import counter_attack
 
 from par import *
+from par.average import Average
+from par.qc import QC
 from topology import Topology
 
 import argparse
@@ -10,16 +12,21 @@ import argparse
 # decentralization matrix
 # when a worker is byzantine, set it's (non-byzantine)adj to 1 if you want it to receive all non-byzantine params
 decentra_matrix = [
-    [0, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 0, 0, 0],
-    [0, 1, 1, 0, 0],
-    [0, 0, 1, 1, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
 ]
 
 
-def train(dataset, batch_size, adj_matrix, attacks):
-    topo = Topology(adj_matrix, attacks, par=average)
+def train(dataset, batch_size, adj_matrix, attacks, par):
+    topo = Topology(adj_matrix, attacks, par=par)
     topo.build_topo(dataset, batch_size)
 
     for worker in topo.workers:
@@ -36,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="MNIST")
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--meta_lr", type=float, default=1e-3)
-    parser.add_argument("--byzantines", type=int, default=0)
+    parser.add_argument("--byzantines", type=int, default=4)
     args = parser.parse_args()
 
     adj_matrix = decentra_matrix
@@ -49,4 +56,5 @@ if __name__ == "__main__":
         args.batch_size,
         adj_matrix=adj_matrix,
         attacks=attacks,
+        par=QC,
     )
