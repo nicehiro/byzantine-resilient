@@ -1,5 +1,5 @@
 import torch
-from attacks import counter_attack
+from attack.max_attack import MaxAttack
 
 from par import *
 from par.average import Average
@@ -48,9 +48,18 @@ if __name__ == "__main__":
 
     adj_matrix = decentra_matrix
     workers_n = len(adj_matrix)
-    attacks = [counter_attack] * args.byzantines + [None] * (
-        workers_n - args.byzantines
-    )
+    attacks = [
+        MaxAttack(),
+        None,
+        MaxAttack(),
+        None,
+        None,
+        MaxAttack(),
+        None,
+        None,
+        MaxAttack(),
+        None,
+    ]
     train(
         args.dataset,
         args.batch_size,

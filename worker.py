@@ -102,7 +102,7 @@ class Worker(Process):
                     for i, s in enumerate(self.src):
                         dist.recv(tensor=params_list[i], src=s)
                     # attack
-                    params = self.attack(params_list)
+                    params = self.attack.attack(params_list)
                 else:
                     # non-byzantine worker don't need to sync the recv params
                     for i, s in enumerate(self.src):
