@@ -8,10 +8,10 @@ from par.par import PAR
 
 
 class QC(PAR):
-    def __init__(self, rank, neighbors, init_value=1.0) -> None:
+    def __init__(self, rank, neighbors, init_value=1.0, **args) -> None:
         super().__init__(rank, neighbors)
         self.q = []
-        for neighbor in neighbors:
+        for _ in neighbors:
             self.q.append(init_value)
         self.neighbors_n = 1 + len(neighbors)
         self.weights = [1 / self.neighbors_n] * (self.neighbors_n - 1)
