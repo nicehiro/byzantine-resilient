@@ -4,3 +4,9 @@
 1. Distributed data parallel training.
 2. Give a topology to train the model.
 3. Give a method to defense byzantine attacks. 
+
+** Code Structure
+- =attack= different attack implements
+- =par= parameters aggregation rule
+- =topology.py= set topology
+- =worker.py= worker node to start a process to train the model

@@ -3,6 +3,7 @@ from attack.max_attack import MaxAttack
 
 from par import *
 from par.average import Average
+from par.opdpg import OPDPG
 from par.qc import QC
 from topology import Topology
 
@@ -13,7 +14,7 @@ import argparse
 # when a worker is byzantine, set it's (non-byzantine)adj to 1 if you want it to receive all non-byzantine params
 decentra_matrix = [
     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
     [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
     [0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
@@ -21,13 +22,26 @@ decentra_matrix = [
     [0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
     [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
     [0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+]
+
+attacks = [
+    MaxAttack(),
+    None,
+    MaxAttack(),
+    None,
+    None,
+    MaxAttack(),
+    None,
+    None,
+    MaxAttack(),
+    None,
 ]
 
 
-def train(dataset, batch_size, adj_matrix, attacks, par):
+def train(dataset, batch_size, adj_matrix, attacks, par, args):
     topo = Topology(adj_matrix, attacks, par=par)
-    topo.build_topo(dataset, batch_size)
+    topo.build_topo(dataset, batch_size, args)
 
     for worker in topo.workers:
         worker.start()
@@ -48,22 +62,12 @@ if __name__ == "__main__":
 
     adj_matrix = decentra_matrix
     workers_n = len(adj_matrix)
-    attacks = [
-        MaxAttack(),
-        None,
-        MaxAttack(),
-        None,
-        None,
-        MaxAttack(),
-        None,
-        None,
-        MaxAttack(),
-        None,
-    ]
+    par_args = {"lr": 1e-4, "gamma": 0.98, "batch_size": 128, "restore_path": "models/"}
     train(
         args.dataset,
         args.batch_size,
         adj_matrix=adj_matrix,
         attacks=attacks,
-        par=QC,
+        par=OPDPG,
+        args=par_args,
     )

@@ -3,3 +3,4 @@ venv/
 *.ipynb
 data/
 __pycache__/
+*.png

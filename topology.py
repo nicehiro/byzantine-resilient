@@ -13,7 +13,7 @@ class Topology:
         self.workers = []
         self.non_byzantines = [i for i, _ in enumerate(attacks) if attacks[i] is None]
 
-    def build_topo(self, dataset, batch_size):
+    def build_topo(self, dataset, batch_size, args):
         train_loaders, test_loader = generate_dataloader(
             dataset, self.size, batch_size=batch_size
         )
@@ -39,7 +39,7 @@ class Topology:
                     self.workers[j].dst.append(i)
         # set par
         for rank, worker in enumerate(self.workers):
-            par = self.par(rank=rank, neighbors=worker.src)
+            par = self.par(rank, worker.src, **args)
             worker.set_par(par)
         # remove or add edges cause byzantine communication
         for worker in self.workers:
