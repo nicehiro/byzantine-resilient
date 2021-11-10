@@ -5,6 +5,7 @@ from par import *
 from par.average import Average
 from par.opdpg import OPDPG
 from par.qc import QC
+from par.zeno import Zeno
 from topology import Topology
 
 import argparse

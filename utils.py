@@ -129,3 +129,20 @@ def set_grads(model, grads):
         offset += weight_flat_size + bias_flat_size
         for module in cur.children():
             _queue.append(module)
+
+
+def meta_test(meta_model, test_loader):
+    """Test the model."""
+    correct = 0
+    total = 0
+    meta_model.eval()
+    with torch.no_grad():
+        for (images, labels) in test_loader:
+            images = CUDA(images)
+            labels = CUDA(labels)
+            outputs = meta_model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+    meta_model.train()
+    return correct / total
