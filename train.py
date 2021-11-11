@@ -5,6 +5,7 @@ from par import *
 from par.average import Average
 from par.opdpg import OPDPG
 from par.qc import QC
+from par.zeno import Zeno
 from topology import Topology
 
 import argparse
@@ -62,12 +63,17 @@ if __name__ == "__main__":
 
     adj_matrix = decentra_matrix
     workers_n = len(adj_matrix)
-    par_args = {"lr": 1e-4, "gamma": 0.98, "batch_size": 128, "restore_path": "models/"}
+    par_args = {
+        "lr": 1e-4,
+        "gamma": 0.98,
+        "batch_size": 51200,
+        "restore_path": "models/",
+    }
     train(
         args.dataset,
         args.batch_size,
         adj_matrix=adj_matrix,
         attacks=attacks,
-        par=OPDPG,
+        par=Average,
         args=par_args,
     )

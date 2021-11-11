@@ -43,7 +43,7 @@ class OPDPG(PAR):
         self.neighbors_n = 1 + len(neighbors)
         self.weights = None
 
-    def par(self, params, params_list: List[torch.Tensor]):
+    def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
         params_n = params.shape[0]
         epochs = params_n // self.batch_size
         if self.weights is None:

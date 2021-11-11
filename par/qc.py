@@ -16,7 +16,7 @@ class QC(PAR):
         self.neighbors_n = 1 + len(neighbors)
         self.weights = [1 / self.neighbors_n] * (self.neighbors_n - 1)
 
-    def par(self, params, params_list: List[torch.Tensor]):
+    def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
         params_n = params.shape[0]
         epochs_n = max(params_n, 1000)
         step_size = 0.1

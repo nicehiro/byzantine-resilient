@@ -10,3 +10,7 @@
 - =par= parameters aggregation rule
 - =topology.py= set topology
 - =worker.py= worker node to start a process to train the model
+
+** Max-Attack
+- 40% test success rate under no defense
+- 90+% test success rate under QC, OPDPG, Zeno

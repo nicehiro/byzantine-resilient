@@ -9,12 +9,15 @@ class PAR:
         self.rank = rank
         self.neighbors = neighbors
 
-    def par(self, params, params_list: List[torch.Tensor]):
+    def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
         """Aggeregate params.
 
         Args:
             params ([torch.Tensor]): self params
             params_list (List[torch.Tensor]): neighbors params
+            model (nn.Module): test_model
+            grad (torch.Tensor): self grad
+            b (int): number of byzantine workers
 
         Raises:
             NotImplementedError

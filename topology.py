@@ -41,6 +41,10 @@ class Topology:
         for rank, worker in enumerate(self.workers):
             par = self.par(rank, worker.src, **args)
             worker.set_par(par)
+        # set byzantine neighbor number
+        for worker in self.workers:
+            for i in worker.src:
+                worker.num_byzantine += 1 if i not in self.non_byzantines else 0
         # remove or add edges cause byzantine communication
         for worker in self.workers:
             worker.construct_src_and_dst()

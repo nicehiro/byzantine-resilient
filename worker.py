@@ -13,6 +13,7 @@ from utils import (
     CUDA,
     collect_grads,
     get_meta_model_flat_params,
+    meta_test,
     set_grads,
     set_meta_model_flat_params,
 )
@@ -59,6 +60,7 @@ class Worker(Process):
         # training params
         self.epochs = epochs
         self.par = None
+        self.num_byzantine = 0
 
     def construct_src_and_dst(self):
         if self.attack is None:
@@ -83,7 +85,7 @@ class Worker(Process):
         dist.init_process_group(backend="gloo", rank=self.rank, world_size=self.size)
         for epoch in range(self.epochs):
             if self.rank in self.test_ranks:
-                acc = self.meta_test()
+                acc = meta_test(self.meta_model, self._test_loader)
                 logging.critical(f"Rank {dist.get_rank()}\tAcc {acc}")
             epoch_loss = 0
             for data, target in self._train_loader:
@@ -117,7 +119,14 @@ class Worker(Process):
                 logging.info(f"Rank {self.rank} receive param {params_list}")
 
                 if self.attack is None:
-                    params = self.par.par(params, params_list)
+                    params = self.par.par(
+                        params,
+                        params_list,
+                        self.meta_model,
+                        self._test_loader,
+                        grad,
+                        self.num_byzantine,
+                    )
                     set_meta_model_flat_params(self.meta_model, params)
                     set_grads(self.meta_model, grad)
                     self.optimizer.step()
@@ -127,19 +136,3 @@ class Worker(Process):
 
     def set_par(self, par):
         self.par = par
-
-    def meta_test(self):
-        """Test the model."""
-        correct = 0
-        total = 0
-        self.meta_model.eval()
-        with torch.no_grad():
-            for (images, labels) in self._test_loader:
-                images = CUDA(images)
-                labels = CUDA(labels)
-                outputs = self.meta_model(images)
-                _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-        self.meta_model.train()
-        return correct / total
