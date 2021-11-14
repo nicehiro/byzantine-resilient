@@ -9,6 +9,9 @@ from par.par import PAR
 
 class QC(PAR):
     def __init__(self, rank, neighbors, init_value=1.0, **args) -> None:
+        """
+        Requirements: n > b
+        """
         super().__init__(rank, neighbors)
         self.q = []
         for _ in neighbors:
