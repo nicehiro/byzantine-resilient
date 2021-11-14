@@ -3,6 +3,9 @@ from attack.max_attack import MaxAttack
 
 from par import *
 from par.average import Average
+from par.bridge import BRIDGE
+from par.d_krum import DKrum
+from par.d_median import DMedian
 from par.opdpg import OPDPG
 from par.qc import QC
 from par.zeno import Zeno
@@ -13,18 +16,46 @@ import argparse
 
 # decentralization matrix
 # when a worker is byzantine, set it's (non-byzantine)adj to 1 if you want it to receive all non-byzantine params
+# poor connection topo
+# decentra_matrix = [
+#     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+#     [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+#     [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+#     [0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+#     [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+#     [1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+# ]
+# topo satisfy n > 2f
+# decentra_matrix = [
+#     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+#     [1, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+#     [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+#     [0, 1, 1, 0, 1, 0, 0, 0, 0, 0],
+#     [1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
+#     [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+#     [0, 0, 0, 1, 0, 1, 1, 0, 1, 1],
+#     [0, 0, 0, 1, 0, 1, 1, 0, 0, 1],
+#     [1, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+# ]
+# topo satisfy n > 2f + 1
 decentra_matrix = [
     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+    [1, 0, 0, 0, 1, 0, 1, 0, 0, 1],
     [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    [0, 1, 1, 0, 1, 0, 1, 0, 0, 0],
+    [1, 1, 0, 1, 0, 1, 1, 0, 0, 1],
     [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+    [0, 1, 0, 0, 0, 0, 0, 1, 1, 1],
+    [0, 1, 0, 1, 0, 1, 1, 0, 1, 1],
+    [0, 0, 0, 1, 0, 1, 1, 0, 0, 1],
+    [1, 1, 0, 0, 0, 0, 1, 1, 0, 0],
 ]
+
 
 attacks = [
     MaxAttack(),
@@ -74,6 +105,6 @@ if __name__ == "__main__":
         args.batch_size,
         adj_matrix=adj_matrix,
         attacks=attacks,
-        par=Average,
+        par=DKrum,
         args=par_args,
     )

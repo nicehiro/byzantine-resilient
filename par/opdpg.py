@@ -24,6 +24,9 @@ class MLPActor(nn.Module):
 
 class OPDPG(PAR):
     def __init__(self, rank, neighbors, **args) -> None:
+        """
+        Requirements: n > b
+        """
         super().__init__(rank, neighbors, **args)
         self.obs_dim = len(neighbors)
         self.act_dim = len(neighbors)
