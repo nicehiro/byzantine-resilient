@@ -8,6 +8,12 @@ from utils import meta_test, set_meta_model_flat_params
 
 
 class Zeno(PAR):
+    """
+    Performance based algorithm.
+
+    Requirement: n > b
+    """
+
     def __init__(self, rank, neighbors, **args) -> None:
         """
         Requirement: n > b

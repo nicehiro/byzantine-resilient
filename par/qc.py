@@ -1,4 +1,3 @@
-import logging
 import math
 from typing import List
 
@@ -8,10 +7,13 @@ from par.par import PAR
 
 
 class QC(PAR):
+    """
+    Q-Consensus.
+
+    Requirements: n >= b + 1
+    """
+
     def __init__(self, rank, neighbors, init_value=1.0, **args) -> None:
-        """
-        Requirements: n > b
-        """
         super().__init__(rank, neighbors)
         self.q = []
         for _ in neighbors:
@@ -20,6 +22,8 @@ class QC(PAR):
         self.weights = [1 / self.neighbors_n] * (self.neighbors_n - 1)
 
     def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
+        n = len(params_list)
+        assert n >= 2 * b + 1, "The number of params should >= 2 * b + 1."
         params_n = params.shape[0]
         epochs_n = max(params_n, 1000)
         step_size = 0.1

@@ -4,6 +4,7 @@ from attack.max_attack import MaxAttack
 from par import *
 from par.average import Average
 from par.bridge import BRIDGE
+from par.d_bulyan import DBulyan
 from par.d_krum import DKrum
 from par.d_median import DMedian
 from par.opdpg import OPDPG
@@ -15,7 +16,6 @@ import argparse
 
 
 # decentralization matrix
-# when a worker is byzantine, set it's (non-byzantine)adj to 1 if you want it to receive all non-byzantine params
 # poor connection topo
 # decentra_matrix = [
 #     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -29,7 +29,7 @@ import argparse
 #     [0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
 #     [1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
 # ]
-# topo satisfy n > 2f
+# topo satisfy n >= 2f + 1
 # decentra_matrix = [
 #     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
 #     [1, 0, 0, 0, 1, 0, 1, 0, 0, 0],
@@ -42,31 +42,44 @@ import argparse
 #     [0, 0, 0, 1, 0, 1, 1, 0, 0, 1],
 #     [1, 1, 0, 0, 0, 0, 1, 0, 0, 0],
 # ]
-# topo satisfy n > 2f + 1
+# topo satisfy n >= 2f + 3
+# decentra_matrix = [
+#     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+#     [1, 0, 0, 1, 1, 0, 1, 0, 0, 1],
+#     [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+#     [0, 1, 1, 0, 1, 0, 1, 0, 0, 1],
+#     [1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+#     [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+#     [0, 1, 0, 1, 0, 0, 0, 1, 1, 1],
+#     [0, 1, 0, 1, 1, 1, 1, 0, 1, 1],
+#     [0, 1, 0, 1, 0, 1, 1, 0, 0, 1],
+#     [1, 1, 0, 0, 1, 0, 1, 1, 0, 0],
+# ]
+# topo satisfy n >= 4f + 3
 decentra_matrix = [
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1, 0, 1, 0, 0, 1],
-    [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 1, 0, 1, 0, 0, 0],
-    [1, 1, 0, 1, 0, 1, 1, 0, 0, 1],
-    [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0, 1, 1, 1],
-    [0, 1, 0, 1, 0, 1, 1, 0, 1, 1],
-    [0, 0, 0, 1, 0, 1, 1, 0, 0, 1],
-    [1, 1, 0, 0, 0, 0, 1, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 1, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 
-
+# byzantine workers: [0, 2, 5, 8]
 attacks = [
-    MaxAttack(),
     None,
     MaxAttack(),
     None,
     None,
-    MaxAttack(),
     None,
     None,
-    MaxAttack(),
+    None,
+    None,
+    None,
     None,
 ]
 
@@ -105,6 +118,6 @@ if __name__ == "__main__":
         args.batch_size,
         adj_matrix=adj_matrix,
         attacks=attacks,
-        par=DKrum,
+        par=DBulyan,
         args=par_args,
     )

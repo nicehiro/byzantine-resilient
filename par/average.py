@@ -6,6 +6,10 @@ from par.par import PAR
 
 
 class Average(PAR):
+    """
+    Average all received params.
+    """
+
     def __init__(self, rank, neighbors, **args) -> None:
         super().__init__(rank, neighbors, **args)
 
@@ -18,6 +22,8 @@ class Average(PAR):
         grad,
         b,
     ):
+        if len(params_list) == 0:
+            return params
         params_list.append(params)
         all = torch.stack(params_list, axis=1)
         m = torch.mean(all, axis=1)

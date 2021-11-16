@@ -23,10 +23,12 @@ class MLPActor(nn.Module):
 
 
 class OPDPG(PAR):
+    """
+    On-Policy Determinstic Policy Gradient algorithm.
+
+    Requirements: n > b
+    """
     def __init__(self, rank, neighbors, **args) -> None:
-        """
-        Requirements: n > b
-        """
         super().__init__(rank, neighbors, **args)
         self.obs_dim = len(neighbors)
         self.act_dim = len(neighbors)

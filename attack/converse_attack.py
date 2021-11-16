@@ -5,13 +5,14 @@ import torch
 from attack.attack import Attack
 
 
-class MaxAttack(Attack):
+class ConverseAttack(Attack):
     """
-    Return the max value of all good workers' params.
+    Return the mean of all good workers params.
     """
     def __init__(self) -> None:
         super().__init__()
 
     def attack(self, params_list: List[torch.Tensor]):
-        all = torch.stack(params_list, 1)
-        return -1 * torch.max(all, 1).values
+        all = torch.stack(params_list, axis=1)
+        m = torch.mean(all, 1)
+        return -1 * m
