@@ -4,12 +4,13 @@ import torch
 
 
 class BRIDGE(PAR):
-    def __init__(self, rank, neighbors, **args) -> None:
-        """
-        Remove b maximum-params and b minimum-params, then aggregate them.
+    """
+    Remove b maximum-params and b minimum-params, then aggregate them.
 
-        Requirement: n > 2b
-        """
+    Requirement: n >= 2b+1
+    """
+
+    def __init__(self, rank, neighbors, **args) -> None:
         super().__init__(rank, neighbors, **args)
 
     def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
@@ -20,7 +21,7 @@ class BRIDGE(PAR):
         """
         n = len(params_list)
         # check neighbor number
-        assert n > b, "The neighbor of this worker should > 2f+1."
+        assert n >= 2 * b + 1, "The neighbor of this worker should > 2f+1."
         all = torch.stack(params_list, axis=1)
         # substract b max params
         all = torch.topk(all, k=(n - b)).values

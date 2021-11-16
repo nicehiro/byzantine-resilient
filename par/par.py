@@ -3,7 +3,10 @@ import torch
 
 
 class PAR:
-    """Parameters Aggeregation Rule."""
+    """Parameters Aggeregation Rule.
+
+    All par need to implement this.
+    """
 
     def __init__(self, rank, neighbors, **args) -> None:
         self.rank = rank
