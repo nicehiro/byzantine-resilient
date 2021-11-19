@@ -1,4 +1,7 @@
 import torch
+
+from attack.guassian_attack import GuassianAttack
+from attack.hidden_attack import HiddenAttack
 from attack.max_attack import MaxAttack
 
 from par import *
@@ -71,16 +74,17 @@ decentra_matrix = [
 # ]
 
 # byzantine workers: [0, 2, 5, 8]
+att = HiddenAttack()
 attacks = [
-    MaxAttack(),
+    att,
     None,
-    MaxAttack(),
-    None,
-    None,
-    MaxAttack(),
+    att,
     None,
     None,
-    MaxAttack(),
+    att,
+    None,
+    None,
+    att,
     None,
 ]
 
@@ -119,6 +123,6 @@ if __name__ == "__main__":
         args.batch_size,
         adj_matrix=adj_matrix,
         attacks=attacks,
-        par=MOZI,
+        par=BRIDGE,
         args=par_args,
     )
