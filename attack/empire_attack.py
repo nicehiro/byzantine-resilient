@@ -5,19 +5,17 @@ import torch
 from attack.attack import Attack
 
 
-class HiddenAttack(Attack):
+class EmpireAttack(Attack):
     """
-    Attack certain dimention.
-
-    Paper: The Hidden Vulnerability of Distributed Learning in Byzantium
+    Paper: Fall of Empire.
     """
 
     def __init__(self) -> None:
         super().__init__()
 
     def attack(self, params_list: List[torch.Tensor]):
+        # return 1-\epsilon g_mean
         all_params = torch.stack(params_list, dim=1)
         mean_params = all_params.mean(dim=1)
-        rand_dim = -1
-        mean_params[rand_dim] += 5
-        return mean_params
+        epsilon = 1.1
+        return (1 - epsilon) * mean_params

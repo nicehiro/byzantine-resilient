@@ -2,7 +2,9 @@ import torch
 
 from attack.guassian_attack import GuassianAttack
 from attack.hidden_attack import HiddenAttack
+from attack.litter_attack import LitterAttack
 from attack.max_attack import MaxAttack
+from attack.empire_attack import EmpireAttack
 
 from par import *
 from par.average import Average
@@ -74,7 +76,7 @@ decentra_matrix = [
 # ]
 
 # byzantine workers: [0, 2, 5, 8]
-att = HiddenAttack()
+att = LitterAttack()
 attacks = [
     att,
     None,
@@ -123,6 +125,6 @@ if __name__ == "__main__":
         args.batch_size,
         adj_matrix=adj_matrix,
         attacks=attacks,
-        par=BRIDGE,
+        par=Average,
         args=par_args,
     )
