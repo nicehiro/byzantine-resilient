@@ -16,8 +16,9 @@ from utils import (
     meta_test,
     set_grads,
     set_meta_model_flat_params,
-    writer,
 )
+
+import numpy as np
 
 
 class Worker(Process):
@@ -84,10 +85,12 @@ class Worker(Process):
         os.environ["MASTER_ADDR"] = self.MASTER_ADDR
         os.environ["MASTER_PORT"] = self.MASTER_PORT
         dist.init_process_group(backend="gloo", rank=self.rank, world_size=self.size)
+        accs = []
         for epoch in range(self.epochs):
             if self.rank in self.test_ranks:
                 acc = meta_test(self.meta_model, self._test_loader)
                 logging.critical(f"Epoch {epoch}\tRank {dist.get_rank()}\tAcc {acc}")
+                accs.append(acc)
             epoch_loss = 0
             for data, target in self._train_loader:
                 data, target = CUDA(Variable(data)), CUDA(Variable(target))
@@ -134,6 +137,8 @@ class Worker(Process):
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
+        accs = np.array(accs)
+        np.savetxt(f"logs/acc_{self.rank}.csv", accs, delimiter=",")
 
     def set_par(self, par):
         self.par = par
