@@ -16,6 +16,7 @@ from utils import (
     meta_test,
     set_grads,
     set_meta_model_flat_params,
+    writer,
 )
 
 
@@ -86,7 +87,7 @@ class Worker(Process):
         for epoch in range(self.epochs):
             if self.rank in self.test_ranks:
                 acc = meta_test(self.meta_model, self._test_loader)
-                logging.critical(f"Rank {dist.get_rank()}\tAcc {acc}")
+                logging.critical(f"Epoch {epoch}\tRank {dist.get_rank()}\tAcc {acc}")
             epoch_loss = 0
             for data, target in self._train_loader:
                 data, target = CUDA(Variable(data)), CUDA(Variable(target))
@@ -130,7 +131,7 @@ class Worker(Process):
                     set_meta_model_flat_params(self.meta_model, params)
                     set_grads(self.meta_model, grad)
                     self.optimizer.step()
-            logging.critical(
+            logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
 

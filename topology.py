@@ -4,7 +4,8 @@ from worker import Worker
 
 
 class Topology:
-    def __init__(self, adj_matrix, attacks, par: PAR) -> None:
+    def __init__(self, epochs, adj_matrix, attacks, par: PAR) -> None:
+        self.epochs = epochs
         self.par = par
         self.adj_matrix = adj_matrix
         self.attacks = attacks
@@ -28,6 +29,7 @@ class Topology:
                 train_loader=train_loaders[rank],
                 test_loader=test_loader,
                 dataset=dataset,
+                epochs=self.epochs,
             )
             self.workers.append(worker)
         # build edges

@@ -1,103 +1,17 @@
-import torch
-
-from attack.guassian_attack import GuassianAttack
-from attack.hidden_attack import HiddenAttack
-from attack.litter_attack import LitterAttack
-from attack.max_attack import MaxAttack
-from attack.empire_attack import EmpireAttack
-
-from par import *
-from par.average import Average
-from par.bridge import BRIDGE
-from par.d_bulyan import DBulyan
-from par.d_krum import DKrum
-from par.d_median import DMedian
-from par.mozi import MOZI
-from par.opdpg import OPDPG
-from par.qc import QC
-from par.zeno import Zeno
-from topology import Topology
-
 import argparse
 
+import torch
 
-# decentralization matrix
-# poor connection topo
-# decentra_matrix = [
-#     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-#     [1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-#     [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-#     [1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-# ]
-# topo satisfy n >= 2f + 1
-# decentra_matrix = [
-#     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-#     [1, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-#     [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
-#     [0, 1, 1, 0, 1, 0, 0, 0, 0, 0],
-#     [1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
-#     [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-#     [0, 0, 0, 1, 0, 1, 1, 0, 1, 1],
-#     [0, 0, 0, 1, 0, 1, 1, 0, 0, 1],
-#     [1, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-# ]
-# topo satisfy n >= 2f + 3
-decentra_matrix = [
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 1, 0, 0, 1],
-    [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 1, 0, 1, 0, 0, 1],
-    [1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
-    [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-    [0, 1, 0, 1, 0, 0, 0, 1, 1, 1],
-    [0, 1, 0, 1, 1, 1, 1, 0, 1, 1],
-    [0, 1, 0, 1, 0, 1, 1, 0, 0, 1],
-    [1, 1, 0, 0, 1, 0, 1, 1, 0, 0],
-]
-# topo satisfy n >= 4f + 3
-# decentra_matrix = [
-#     [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [1, 0, 0, 1, 0, 1, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [1, 0, 0, 0, 0, 1, 0, 1, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-# ]
-
-# byzantine workers: [0, 2, 5, 8]
-att = LitterAttack()
-attacks = [
-    att,
-    None,
-    att,
-    None,
-    None,
-    att,
-    None,
-    None,
-    att,
-    None,
-]
+from matrix import make_matrix
+from par import pars
+from topology import Topology
 
 
-def train(dataset, batch_size, adj_matrix, attacks, par, args):
-    topo = Topology(adj_matrix, attacks, par=par)
+def train(epochs, dataset, batch_size, adj_matrix, attacks, par, args):
+    topo = Topology(epochs, adj_matrix, attacks, par=par)
     topo.build_topo(dataset, batch_size, args)
-
     for worker in topo.workers:
         worker.start()
-
     for worker in topo.workers:
         worker.join()
 
@@ -106,14 +20,24 @@ if __name__ == "__main__":
     # spawn method for cuda
     torch.multiprocessing.set_start_method("spawn")
     parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs", type=int, default=500)
     parser.add_argument("--dataset", type=str, default="MNIST")
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--meta_lr", type=float, default=1e-3)
-    parser.add_argument("--byzantines", type=int, default=4)
+    parser.add_argument("--nodes_n", type=int, default=50)
+    parser.add_argument("--byzantine_radio", type=float, default=0.1)
+    parser.add_argument("--connection_radio", type=float, default=0.1)
+    parser.add_argument("--attack", type=str, default="max")
+    parser.add_argument("--par", type=str, default="average")
     args = parser.parse_args()
 
-    adj_matrix = decentra_matrix
-    workers_n = len(adj_matrix)
+    adj_matrix, attacks = make_matrix(
+        nodes_n=args.nodes_n,
+        connect_probs=args.connection_radio,
+        byzantine_probs=args.byzantine_radio,
+        attack=args.attack,
+    )
+    workers_n = args.nodes_n
     par_args = {
         "lr": 1e-4,
         "gamma": 0.98,
@@ -121,10 +45,11 @@ if __name__ == "__main__":
         "restore_path": "models/",
     }
     train(
+        args.epochs,
         args.dataset,
         args.batch_size,
         adj_matrix=adj_matrix,
         attacks=attacks,
-        par=Average,
+        par=pars[args.par],
         args=par_args,
     )
