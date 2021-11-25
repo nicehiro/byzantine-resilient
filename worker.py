@@ -25,7 +25,7 @@ class Worker(Process):
     meta_models = {"MNIST": MNIST, "CIFAR10": CIFAR10}
     # grad_shape = {"MNIST": (25450, 1), "CIFAR10": (62006, 1)}
     MASTER_ADDR = "127.0.0.1"
-    MASTER_PORT = "29904"
+    MASTER_PORT = "29905"
 
     def __init__(
         self,
@@ -137,8 +137,9 @@ class Worker(Process):
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
-        accs = np.array(accs)
-        np.savetxt(f"logs/acc_{self.rank}.csv", accs, delimiter=",")
+            if epoch % 10 == 0:
+                t = np.array(accs)
+                np.savetxt(f"logs/baseline/acc_{self.rank}.csv", t, delimiter=",")
 
     def set_par(self, par):
         self.par = par

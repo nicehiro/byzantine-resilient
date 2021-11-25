@@ -22,19 +22,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=500)
     parser.add_argument("--dataset", type=str, default="MNIST")
-    parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--meta_lr", type=float, default=1e-3)
-    parser.add_argument("--nodes_n", type=int, default=50)
-    parser.add_argument("--byzantine_radio", type=float, default=0.1)
-    parser.add_argument("--connection_radio", type=float, default=0.1)
+    parser.add_argument("--nodes_n", type=int, default=30)
+    parser.add_argument("--byzantine_ratio", type=float, default=0.1)
+    parser.add_argument("--connection_ratio", type=float, default=0.4)
     parser.add_argument("--attack", type=str, default="max")
     parser.add_argument("--par", type=str, default="average")
     args = parser.parse_args()
 
     adj_matrix, attacks = make_matrix(
         nodes_n=args.nodes_n,
-        connect_probs=args.connection_radio,
-        byzantine_probs=args.byzantine_radio,
+        connect_probs=args.connection_ratio,
+        byzantine_probs=args.byzantine_ratio,
         attack=args.attack,
     )
     workers_n = args.nodes_n

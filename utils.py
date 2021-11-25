@@ -8,7 +8,7 @@ from torch import nn
 from torch.utils.tensorboard.writer import SummaryWriter
 
 
-writer = SummaryWriter(log_dir="logs/")
+# writer = SummaryWriter(log_dir="logs/")
 
 
 def combined_shape(length, shape=None):
