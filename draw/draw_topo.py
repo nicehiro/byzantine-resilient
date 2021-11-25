@@ -1,11 +1,14 @@
 import sys
+
 print(sys.path)
 
-from train import decentra_matrix, attacks
-
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+from matrix import make_matrix
 
+decentra_matrix, attacks = make_matrix(
+    nodes_n=30, connect_probs=0.4, byzantine_probs=0.2, attack="max"
+)
 
 nodes_n = len(attacks)
 byzantines = [i for i, a in enumerate(attacks) if a is not None]
