@@ -7,8 +7,8 @@ from par import pars
 from topology import Topology
 
 
-def train(epochs, dataset, batch_size, adj_matrix, attacks, par, args):
-    topo = Topology(epochs, adj_matrix, attacks, par=par)
+def train(epochs, logdir, dataset, batch_size, adj_matrix, attacks, par, args):
+    topo = Topology(epochs, logdir, adj_matrix, attacks, par=par)
     topo.build_topo(dataset, batch_size, args)
     for worker in topo.workers:
         worker.start()
@@ -29,6 +29,7 @@ if __name__ == "__main__":
     parser.add_argument("--connection_ratio", type=float, default=0.4)
     parser.add_argument("--attack", type=str, default="max")
     parser.add_argument("--par", type=str, default="average")
+    parser.add_argument("--logdir", type=str, default="test")
     args = parser.parse_args()
 
     adj_matrix, attacks = make_matrix(
@@ -46,6 +47,7 @@ if __name__ == "__main__":
     }
     train(
         args.epochs,
+        args.logdir,
         args.dataset,
         args.batch_size,
         adj_matrix=adj_matrix,

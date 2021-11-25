@@ -1,14 +1,18 @@
+import os
 from functools import reduce
 from operator import mul
 
 import numpy as np
 import torch
 from torch import nn
-
 from torch.utils.tensorboard.writer import SummaryWriter
 
-
 # writer = SummaryWriter(log_dir="logs/")
+
+
+def check_dir(dir):
+    if not os.path.exists(dir):
+        os.mkdir(dir)
 
 
 def combined_shape(length, shape=None):

@@ -11,6 +11,7 @@ from torch.multiprocessing import Process
 from models import CIFAR10, MNIST
 from utils import (
     CUDA,
+    check_dir,
     collect_grads,
     get_meta_model_flat_params,
     meta_test,
@@ -40,8 +41,10 @@ class Worker(Process):
         criterion=F.cross_entropy,
         epochs=100,
         weight_decay=5e-4,
+        logdir="test",
     ) -> None:
         super().__init__()
+        self.logdir = "logs" + logdir
         self.rank = rank
         self.size = size
         self.attack = attack
@@ -137,9 +140,10 @@ class Worker(Process):
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
+            check_dir(self.logdir)
             if epoch % 10 == 0:
                 t = np.array(accs)
-                np.savetxt(f"logs/baseline/acc_{self.rank}.csv", t, delimiter=",")
+                np.savetxt(f"{self.logdir}/acc_{self.rank}.csv", t, delimiter=",")
 
     def set_par(self, par):
         self.par = par
