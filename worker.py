@@ -44,7 +44,7 @@ class Worker(Process):
         logdir="test",
     ) -> None:
         super().__init__()
-        self.logdir = "logs" + logdir
+        self.logdir = os.path.join("logs", logdir)
         self.rank = rank
         self.size = size
         self.attack = attack

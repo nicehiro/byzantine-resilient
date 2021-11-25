@@ -20,15 +20,17 @@ if __name__ == "__main__":
     # spawn method for cuda
     torch.multiprocessing.set_start_method("spawn")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", type=int, default=500)
+    parser.add_argument(
+        "--epochs", type=int, default=200, help="MNIST: 50, CIFAR10: 200"
+    )
     parser.add_argument("--dataset", type=str, default="MNIST")
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--meta_lr", type=float, default=1e-3)
-    parser.add_argument("--nodes_n", type=int, default=30)
+    parser.add_argument("--nodes_n", type=int, default=5)
     parser.add_argument("--byzantine_ratio", type=float, default=0.1)
     parser.add_argument("--connection_ratio", type=float, default=0.4)
     parser.add_argument("--attack", type=str, default="max")
-    parser.add_argument("--par", type=str, default="average")
+    parser.add_argument("--par", type=str, default="opdpg")
     parser.add_argument("--logdir", type=str, default="test")
     args = parser.parse_args()
 

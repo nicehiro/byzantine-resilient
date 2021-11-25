@@ -6,7 +6,7 @@ from .d_median import DMedian
 from .mozi import MOZI
 from .opdpg import OPDPG
 from .qc import QC
-
+from .zeno import Zeno
 
 pars = {
     "average": Average,
@@ -17,4 +17,5 @@ pars = {
     "mozi": MOZI,
     "opdpg": OPDPG,
     "qc": QC,
+    "zeno": Zeno,
 }
