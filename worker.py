@@ -141,7 +141,7 @@ class Worker(Process):
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
             check_dir(self.logdir)
-            if epoch % 10 == 0:
+            if epoch % 1 == 0:
                 t = np.array(accs)
                 np.savetxt(f"{self.logdir}/acc_{self.rank}.csv", t, delimiter=",")
 

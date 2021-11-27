@@ -6,7 +6,16 @@ import matplotlib.pyplot as plt
 
 
 root_path = "logs/mnist"
-paths = ["baseline", "max-average", "max-median", "max-qc"]
+paths = [
+    "baseline",
+    "max-average",
+    "max-median",
+    "max-qc",
+    "max-zeno",
+    "max-mozi",
+    "max-bridge",
+    "max-opdpg",
+]
 
 
 for path in paths:
@@ -23,6 +32,7 @@ for path in paths:
     # get min acc log
     min_acc = logs.min(axis=1)
     # draw min acc
-    min_acc.plot()
+    min_acc.plot(label=path)
 
+plt.legend()
 plt.savefig("mnist-acc.png")

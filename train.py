@@ -4,6 +4,8 @@ import torch
 
 from matrix import make_matrix
 from par import pars
+from par.average import Average
+from par.opdpg import OPDPG
 from topology import Topology
 
 
@@ -26,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="MNIST")
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--meta_lr", type=float, default=1e-3)
-    parser.add_argument("--nodes_n", type=int, default=5)
+    parser.add_argument("--nodes_n", type=int, default=2)
     parser.add_argument("--byzantine_ratio", type=float, default=0.1)
     parser.add_argument("--connection_ratio", type=float, default=0.4)
     parser.add_argument("--attack", type=str, default="max")
@@ -40,11 +42,13 @@ if __name__ == "__main__":
         byzantine_probs=args.byzantine_ratio,
         attack=args.attack,
     )
+    # adj_matrix = [[0, 1], [0, 0]]
+    # attacks = [None, None]
     workers_n = args.nodes_n
     par_args = {
         "lr": 1e-4,
         "gamma": 0.98,
-        "batch_size": 51200,
+        "batch_size": 512,  # mnist 512
         "restore_path": "models/",
     }
     train(

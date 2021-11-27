@@ -28,6 +28,7 @@ class OPDPG(PAR):
 
     Requirements: n > b
     """
+
     def __init__(self, rank, neighbors, **args) -> None:
         super().__init__(rank, neighbors, **args)
         self.obs_dim = len(neighbors)
@@ -49,6 +50,8 @@ class OPDPG(PAR):
         self.weights = None
 
     def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
+        if len(params_list) == 0:
+            return params
         params_n = params.shape[0]
         epochs = params_n // self.batch_size
         if self.weights is None:
@@ -60,7 +63,8 @@ class OPDPG(PAR):
             indexes = rand_indexes[i * self.batch_size : (i + 1) * self.batch_size]
             o, w = obs[indexes].detach().clone(), self.weights[indexes].detach().clone()
             a = self.act(o, w)
-            self.weights[indexes] = a
+            # use detach() or will get memory leak
+            self.weights[indexes] = a.detach()
             # calc reward
             self.optimizer.zero_grad()
             d = torch.sum(abs(o) * a, dim=1)
