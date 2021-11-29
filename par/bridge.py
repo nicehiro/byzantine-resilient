@@ -21,7 +21,8 @@ class BRIDGE(PAR):
         """
         n = len(params_list)
         # check neighbor number
-        assert n >= 2 * b + 1, "The neighbor of this worker should > 2f+1."
+        # assert n >= 2 * b + 1, "The neighbor of this worker should > 2f+1."
+        b = max(b, n // 2)
         all = torch.stack(params_list, dim=1)
         # substract b max params
         all = torch.topk(all, k=(n - b)).values

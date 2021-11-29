@@ -48,7 +48,7 @@ if __name__ == "__main__":
     par_args = {
         "lr": 1e-4,
         "gamma": 0.98,
-        "batch_size": 512,  # mnist 512
+        "batch_size": 5120,  # mnist 5120
         "restore_path": "models/",
     }
     train(

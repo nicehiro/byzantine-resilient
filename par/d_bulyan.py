@@ -18,7 +18,8 @@ class DBulyan(PAR):
         if len(params_list) == 0:
             return params
         n = len(params_list)
-        assert n >= 4 * b + 3, "The number of neighbors should >= 4b + 3."
+        # assert n >= 4 * b + 3, "The number of neighbors should >= 4b + 3."
+        b = max(b, n // 2)
         params_copy = deepcopy(params_list)
         res = []
         for i in range(n - 2 * b):
@@ -32,7 +33,7 @@ class DBulyan(PAR):
                         dists.append(d)
                 sorted_index = torch.argsort(torch.tensor(dists), descending=False)
                 dists = torch.tensor(dists)
-                scores.append(dists[sorted_index[0 : n - b - 2]].sum())
+                scores.append(dists[sorted_index[0 : n - b - 1]].sum())
             krum_index = torch.argsort(torch.tensor(scores), descending=False)
             # remove current krun res
             krum_res = params_copy.pop(krum_index[0])

@@ -15,6 +15,7 @@ paths = [
     "max-mozi",
     "max-bridge",
     "max-opdpg",
+    "max-bridge",
 ]
 
 

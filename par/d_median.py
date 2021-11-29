@@ -18,7 +18,7 @@ class DMedian(PAR):
         Coordinate-wise median of n received params.
         """
         n = len(params_list)
-        assert n >= 2 * b + 1, "The number of neighbors should >= 2b + 1."
+        # assert n >= 2 * b + 1, "The number of neighbors should >= 2b + 1."
         all = torch.stack(params_list, 1)
         m = torch.median(all, 1).values
         res = torch.stack([m, params], 1)

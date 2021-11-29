@@ -26,7 +26,7 @@ class Worker(Process):
     meta_models = {"MNIST": MNIST, "CIFAR10": CIFAR10}
     # grad_shape = {"MNIST": (25450, 1), "CIFAR10": (62006, 1)}
     MASTER_ADDR = "127.0.0.1"
-    MASTER_PORT = "29905"
+    MASTER_PORT = "29906"
 
     def __init__(
         self,
