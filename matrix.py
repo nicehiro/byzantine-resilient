@@ -70,17 +70,29 @@ def make_matrix(nodes_n, connect_probs, byzantine_probs, attack):
     """
     matrix = []
     attack_matrix = []
+    non_byzantines = []
     for i in range(nodes_n):
         if attack and random.random() < byzantine_probs:
             attack_matrix.append(attacks[attack]())
         else:
             attack_matrix.append(None)
+            non_byzantines.append(i)
     for i in range(nodes_n):
         adj_i = []
+        has_benign = False
         for j in range(nodes_n):
             if i == j or random.random() > connect_probs:
                 adj_i.append(0)
             else:
                 adj_i.append(1)
+                if j in non_byzantines:
+                    has_benign = True
+        if not has_benign:
+            # make sure every node has a benign neighbor except self
+            adj_i[random.choice(non_byzantines)] = 1
         matrix.append(adj_i)
     return matrix, attack_matrix
+
+
+if __name__ == "__main__":
+    make_matrix(nodes_n=5, connect_probs=0.1, byzantine_probs=0.7, attack="max")

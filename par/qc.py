@@ -23,7 +23,7 @@ class QC(PAR):
 
     def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
         n = len(params_list)
-        assert n >= 2 * b + 1, "The number of params should >= 2 * b + 1."
+        assert n >= b + 1, "The number of params should >= b + 1."
         params_n = params.shape[0]
         epochs_n = max(params_n, 1000)
         step_size = 0.1

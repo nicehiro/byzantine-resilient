@@ -1,7 +1,10 @@
-from typing import List
-from par.par import PAR
-import torch
+import math
 from copy import deepcopy
+from typing import List
+
+import torch
+
+from par.par import PAR
 
 
 class DBulyan(PAR):
@@ -19,7 +22,7 @@ class DBulyan(PAR):
             return params
         n = len(params_list)
         # assert n >= 4 * b + 3, "The number of neighbors should >= 4b + 3."
-        b = max(b, n // 2)
+        b = int(min(b, math.floor(n / 2)))
         params_copy = deepcopy(params_list)
         res = []
         for i in range(n - 2 * b):
@@ -38,6 +41,8 @@ class DBulyan(PAR):
             # remove current krun res
             krum_res = params_copy.pop(krum_index[0])
             res.append(krum_res)
+        if len(res) == 0:
+            return params
         # use coordinate-wise median select 1 param
         all = torch.stack(res, 1)
         m = torch.median(all, 1).values

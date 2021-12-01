@@ -68,8 +68,8 @@ class OPDPG(PAR):
             # calc reward
             self.optimizer.zero_grad()
             d = torch.sum(abs(o) * a, dim=1)
-            # mnist: 800
-            r = torch.exp(-800 * d)
+            # mnist: 0.1: 800 0.3:
+            r = torch.exp(-2000 * d)
             loss = -torch.mean(r)
             loss.backward()
             for p in self.policy.parameters():

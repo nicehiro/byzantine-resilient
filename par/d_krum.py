@@ -1,6 +1,9 @@
+import math
 from typing import List
-from par.par import PAR
+
 import torch
+
+from par.par import PAR
 
 
 class DKrum(PAR):
@@ -19,6 +22,7 @@ class DKrum(PAR):
         n = len(params_list)
         # assert n >= 2 * b + 3, "Krum requirement: n >= 2b + 3."
         b = max(b, n // 2)
+        b = int(min(b, math.floor(n / 2)))
         scores = []
         for i, p1 in enumerate(params_list):
             dists = []
@@ -29,6 +33,8 @@ class DKrum(PAR):
             sorted_index = torch.argsort(torch.tensor(dists), descending=False)
             dists = torch.tensor(dists)
             scores.append(dists[sorted_index[0 : n - b - 1]].sum())
+        if len(scores) == 0:
+            return params
         res = torch.argsort(torch.tensor(scores), descending=False)
         all = torch.hstack([params_list[res[0]].unsqueeze(1), params.unsqueeze(1)])
         return torch.mean(all, 1)

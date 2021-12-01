@@ -6,20 +6,21 @@ import matplotlib.pyplot as plt
 
 
 root_path = "logs/mnist"
-paths = [
-    "baseline",
-    "max-average",
-    "max-median",
-    "max-qc",
-    "max-zeno",
-    "max-mozi",
-    "max-bridge",
-    "max-opdpg",
-    "max-bridge",
+attack = "gaussian"
+pars = [
+    "average",
+    "median",
+    "bridge",
+    "krum",
+    "bulyan",
+    "zeno",
+    "mozi",
+    "qc",
 ]
+paths = ["baseline"] + [f"{attack}-{par}" for par in pars]
 
 
-for path in paths:
+for i, path in enumerate(paths):
     logdir = os.path.join(root_path, path)
     logs_path = os.listdir(logdir)
     logs_list = []
@@ -33,7 +34,8 @@ for path in paths:
     # get min acc log
     min_acc = logs.min(axis=1)
     # draw min acc
-    min_acc.plot(label=path)
+    label = "baseline" if i == 0 else pars[i - 1]
+    min_acc.plot(label=label)
 
 plt.legend()
 plt.savefig("mnist-acc.png")

@@ -5,14 +5,13 @@ from attack.attack import Attack
 import torch
 
 
-class GuassianAttack(Attack):
+class GaussianAttack(Attack):
     """
     Gaussian Attack.
     """
 
     def __init__(self) -> None:
         super().__init__()
-
 
     def attack(self, params_list: List[torch.Tensor]):
         all_params = torch.stack(params_list, dim=1)

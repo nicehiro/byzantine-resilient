@@ -1,6 +1,9 @@
-from par.par import PAR
+import math
 from typing import List
+
 import torch
+
+from par.par import PAR
 
 
 class BRIDGE(PAR):
@@ -22,12 +25,14 @@ class BRIDGE(PAR):
         n = len(params_list)
         # check neighbor number
         # assert n >= 2 * b + 1, "The neighbor of this worker should > 2f+1."
-        b = max(b, n // 2)
+        b = int(min(b, math.floor(n / b)))
         all = torch.stack(params_list, dim=1)
         # substract b max params
         all = torch.topk(all, k=(n - b)).values
         all = torch.topk(-all, k=(n - 2 * b)).values
         all = -all
+        if len(all) == 0:
+            return params
         # append self params
         res = torch.hstack([all, params.unsqueeze(1)])
         return torch.mean(res, dim=1)
