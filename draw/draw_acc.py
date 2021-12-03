@@ -5,23 +5,27 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-root_path = "logs/mnist"
 attack = "gaussian"
+root_path = f"logs/mnist/{attack}/by-5/"
 pars = [
     "average",
-    "median",
     "bridge",
+    "median",
     "krum",
     "bulyan",
     "zeno",
-    "mozi",
+    # "mozi",
     "qc",
 ]
 paths = ["baseline"] + [f"{attack}-{par}" for par in pars]
 
+final_acc = []
 
 for i, path in enumerate(paths):
-    logdir = os.path.join(root_path, path)
+    if path != "baseline":
+        logdir = os.path.join(root_path, path)
+    else:
+        logdir = os.path.join("logs/mnist/", path)
     logs_path = os.listdir(logdir)
     logs_list = []
     non_zero_logs = []
@@ -35,7 +39,11 @@ for i, path in enumerate(paths):
     min_acc = logs.min(axis=1)
     # draw min acc
     label = "baseline" if i == 0 else pars[i - 1]
+    # save final acc
+    final_acc.append(min_acc[len(min_acc) - 1])
     min_acc.plot(label=label)
+
+np.savetxt("acc.csv", np.array(final_acc))
 
 plt.legend()
 plt.savefig("mnist-acc.png")

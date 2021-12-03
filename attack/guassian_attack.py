@@ -17,7 +17,8 @@ class GaussianAttack(Attack):
         all_params = torch.stack(params_list, dim=1)
         # get mean and std
         mean_params = all_params.mean(dim=1)
-        std_params = all_params.std(dim=1)
+        # std_params = all_params.std(dim=1)
+        std_params = torch.ones_like(mean_params)
         # gaussian sample between min and max
         res = torch.normal(mean_params, std_params)
         return res

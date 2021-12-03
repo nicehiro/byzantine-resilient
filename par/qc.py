@@ -35,6 +35,8 @@ class QC(PAR):
                 r_ij = self.weights[j] * r_ij
                 rewards[j] = r_ij
             sum_r = sum(rewards.values())
+            if sum_r == 0:
+                continue
             for j in range(len(self.q)):
                 r_ij = rewards[j] / sum_r
                 self.q[j] += max(step_size, 0) * (r_ij - self.q[j])

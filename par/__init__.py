@@ -11,9 +11,9 @@ from .zeno import Zeno
 pars = {
     "average": Average,
     "bridge": BRIDGE,
-    "bulyan": DBulyan,
-    "krum": DKrum,
     "median": DMedian,
+    "krum": DKrum,
+    "bulyan": DBulyan,
     "mozi": MOZI,
     "opdpg": OPDPG,
     "qc": QC,

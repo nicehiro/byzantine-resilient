@@ -26,7 +26,7 @@ class Worker(Process):
     meta_models = {"MNIST": MNIST, "CIFAR10": CIFAR10}
     # grad_shape = {"MNIST": (25450, 1), "CIFAR10": (62006, 1)}
     MASTER_ADDR = "127.0.0.1"
-    MASTER_PORT = "29906"
+    MASTER_PORT = "29805"
 
     def __init__(
         self,
@@ -141,7 +141,7 @@ class Worker(Process):
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
             check_dir(self.logdir)
-            if epoch % 1 == 0:
+            if self.attack is None and epoch % 1 == 0:
                 t = np.array(accs)
                 np.savetxt(f"{self.logdir}/acc_{self.rank}.csv", t, delimiter=",")
 
