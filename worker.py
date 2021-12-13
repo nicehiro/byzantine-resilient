@@ -91,7 +91,7 @@ class Worker(Process):
         accs = []
         for epoch in range(self.epochs):
             if self.rank in self.test_ranks:
-                acc = meta_test(self.meta_model, self._test_loader)
+                acc = meta_test(CUDA(self.meta_model), self._test_loader)
                 logging.critical(f"Epoch {epoch}\tRank {dist.get_rank()}\tAcc {acc}")
                 accs.append(acc)
             epoch_loss = 0
@@ -134,8 +134,8 @@ class Worker(Process):
                         grad,
                         self.num_byzantine,
                     )
-                    set_meta_model_flat_params(self.meta_model, params.cuda())
-                    set_grads(self.meta_model.cuda(), grad.cuda())
+                    set_meta_model_flat_params(self.meta_model, params)
+                    set_grads(CUDA(self.meta_model), CUDA(grad))
                     self.optimizer.step()
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"

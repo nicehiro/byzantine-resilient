@@ -90,7 +90,12 @@ def make_matrix(nodes_n, connect_probs, byzantine_probs, attack):
                     has_benign = True
         if not has_benign:
             # make sure every node has a benign neighbor except self
-            adj_i[random.choice(non_byzantines)] = 1
+            if len(non_byzantines) <= 1:
+                continue
+            benigh_n = random.choice(non_byzantines)
+            while benigh_n == i:
+                benigh_n = random.choice(non_byzantines)
+            adj_i[benigh_n] = 1
         matrix.append(adj_i)
     matrix = ensure_rooted(matrix, attack_matrix)
     return matrix, attack_matrix
