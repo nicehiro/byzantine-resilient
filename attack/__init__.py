@@ -7,7 +7,6 @@ from .empire_attack import EmpireAttack
 
 
 attacks = {
-    "none": None,
     "converse": ConverseAttack,
     "max": MaxAttack,
     "gaussian": GaussianAttack,

@@ -5,6 +5,7 @@ from operator import mul
 import numpy as np
 import torch
 from torch import nn
+from torch.autograd import Variable
 from torch.utils.tensorboard.writer import SummaryWriter
 
 # writer = SummaryWriter(log_dir="logs/")
@@ -35,8 +36,8 @@ def count_vars(module):
 
 def CUDA(var):
     """Turn var to cuda device if cuda is available."""
-    # return var.cuda() if torch.cuda.is_available() else var
-    return var
+    return var.cuda() if torch.cuda.is_available() else var
+    # return var
 
 
 def get_meta_model_flat_params(model):
@@ -147,8 +148,8 @@ def meta_test(meta_model, test_loader):
     meta_model.eval()
     with torch.no_grad():
         for (images, labels) in test_loader:
-            images = CUDA(images)
-            labels = CUDA(labels)
+            images = CUDA(Variable(images))
+            labels = CUDA(Variable(labels))
             outputs = meta_model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)

@@ -31,8 +31,8 @@ if __name__ == "__main__":
     parser.add_argument("--nodes_n", type=int, default=5)
     parser.add_argument("--byzantine_ratio", type=float, default=0.5)
     parser.add_argument("--connection_ratio", type=float, default=0.4)
-    parser.add_argument("--attack", type=str, default="hidden")
-    parser.add_argument("--par", type=str, default="qc")
+    parser.add_argument("--attack", type=str, default="max")
+    parser.add_argument("--par", type=str, default="average")
     parser.add_argument("--logdir", type=str, default="test")
     args = parser.parse_args()
 

@@ -26,7 +26,7 @@ class Worker(Process):
     meta_models = {"MNIST": MNIST, "CIFAR10": CIFAR10}
     # grad_shape = {"MNIST": (25450, 1), "CIFAR10": (62006, 1)}
     MASTER_ADDR = "127.0.0.1"
-    MASTER_PORT = "29805"
+    MASTER_PORT = "29905"
 
     def __init__(
         self,
@@ -102,9 +102,9 @@ class Worker(Process):
                 loss = self.criterion(predict_y, target)
                 epoch_loss += loss.item()
                 # get current model's params
-                params = get_meta_model_flat_params(self.meta_model)
+                params = get_meta_model_flat_params(self.meta_model).cpu()
                 params_list = [torch.zeros_like(params) for _ in range(len(self.src))]
-                grad = collect_grads(self.meta_model, loss)
+                grad = collect_grads(self.meta_model, loss).cpu()
                 reqs = []
                 if self.attack is not None:
                     # byzantine worker receive good worker params first then attack
@@ -129,13 +129,13 @@ class Worker(Process):
                     params = self.par.par(
                         params,
                         params_list,
-                        self.meta_model,
+                        self.meta_model.cpu(),
                         self._test_loader,
                         grad,
                         self.num_byzantine,
                     )
-                    set_meta_model_flat_params(self.meta_model, params)
-                    set_grads(self.meta_model, grad)
+                    set_meta_model_flat_params(self.meta_model, params.cuda())
+                    set_grads(self.meta_model.cuda(), grad.cuda())
                     self.optimizer.step()
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
