@@ -12,7 +12,16 @@ class PAR:
         self.rank = rank
         self.neighbors = neighbors
 
-    def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
+    def par(
+        self,
+        params,
+        params_list: List[torch.Tensor],
+        model,
+        test_loader,
+        grad,
+        b,
+        device_id,
+    ):
         """Aggeregate params.
 
         Args:

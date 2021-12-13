@@ -18,7 +18,14 @@ class MOZI(PAR):
         super().__init__(rank, neighbors, **args)
 
     def par(
-        self, params, params_list: List[torch.Tensor], meta_model, test_loader, grad, b
+        self,
+        params,
+        params_list: List[torch.Tensor],
+        meta_model,
+        test_loader,
+        grad,
+        b,
+        device_id,
     ):
         rho = 0.5
         n = len(params_list)
@@ -39,11 +46,11 @@ class MOZI(PAR):
         perf_choose_index = []
         # self loss
         set_meta_model_flat_params(model, params)
-        self_loss = meta_test(model, test_loader)
+        self_loss = meta_test(model, test_loader, device_id)
         # other loss
         for i in dist_choose_index:
             set_meta_model_flat_params(model, params_list[i])
-            loss = meta_test(model, test_loader)
+            loss = meta_test(model, test_loader, device_id)
             if loss - self_loss < epsilon:
                 perf_choose_index.append(i)
         # update params

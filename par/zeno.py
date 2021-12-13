@@ -21,7 +21,14 @@ class Zeno(PAR):
         super().__init__(rank, neighbors, **args)
 
     def par(
-        self, params, params_list: List[torch.Tensor], meta_model, test_loader, grad, b
+        self,
+        params,
+        params_list: List[torch.Tensor],
+        meta_model,
+        test_loader,
+        grad,
+        b,
+        device_id,
     ):
         model = deepcopy(meta_model)
         # get score for each neighbor
@@ -29,7 +36,7 @@ class Zeno(PAR):
         for i, neigh in enumerate(self.neighbors):
             set_meta_model_flat_params(model, params_list[i])
             # if we need to gradient decsent on meta_model
-            score = meta_test(model, test_loader)
+            score = meta_test(model, test_loader, device_id)
             scores.append(score)
         # sort scores, and delete b byzantine workers
         sorted_index = [x[0] for x in sorted(enumerate(scores), key=lambda x: x[1])]

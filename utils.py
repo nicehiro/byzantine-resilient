@@ -34,10 +34,10 @@ def count_vars(module):
     return sum([np.prod(p.shape) for p in module.parameters()])
 
 
-def CUDA(var):
+def TO_CUDA(var, id=0):
     """Turn var to cuda device if cuda is available."""
-    return var.cuda() if torch.cuda.is_available() else var
-    # return var
+    device = torch.cuda.device(f"cuda:{id}" if torch.cuda.is_available() else "cpu")
+    return var.to(device)
 
 
 def get_meta_model_flat_params(model):
@@ -141,15 +141,15 @@ def set_grads(model, grads):
             _queue.append(module)
 
 
-def meta_test(meta_model, test_loader):
+def meta_test(meta_model, test_loader, device_id):
     """Test the model."""
     correct = 0
     total = 0
     meta_model.eval()
     with torch.no_grad():
         for (images, labels) in test_loader:
-            images = CUDA(Variable(images))
-            labels = CUDA(Variable(labels))
+            images = TO_CUDA(Variable(images), device_id)
+            labels = TO_CUDA(Variable(labels), device_id)
             outputs = meta_model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)

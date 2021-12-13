@@ -10,7 +10,7 @@ from torch.multiprocessing import Process
 
 from models import CIFAR10, MNIST
 from utils import (
-    CUDA,
+    TO_CUDA,
     check_dir,
     collect_grads,
     get_meta_model_flat_params,
@@ -46,6 +46,14 @@ class Worker(Process):
         super().__init__()
         self.logdir = os.path.join("logs", logdir)
         self.rank = rank
+        if self.rank < 10:
+            self.device_id = 0
+        elif self.rank < 20:
+            self.device_id = 1
+        elif self.rank < 25:
+            self.device_id = 2
+        else:
+            self.device_id = 3
         self.size = size
         self.attack = attack
         self.criterion = criterion
@@ -53,7 +61,7 @@ class Worker(Process):
         self._test_loader = test_loader
         self.dataset = dataset
         # self._train_iter = iter(self._train_loader)
-        self.meta_model = CUDA(self.meta_models[self.dataset]())
+        self.meta_model = self.meta_models[self.dataset]()
         self.optimizer = optim.Adam(
             self.meta_model.parameters(), lr=meta_lr, weight_decay=weight_decay
         )
@@ -91,12 +99,15 @@ class Worker(Process):
         accs = []
         for epoch in range(self.epochs):
             if self.rank in self.test_ranks:
-                acc = meta_test(CUDA(self.meta_model), self._test_loader)
+                acc = meta_test(
+                    TO_CUDA(self.meta_model, self.device_id), self._test_loader, self.device_id
+                )
                 logging.critical(f"Epoch {epoch}\tRank {dist.get_rank()}\tAcc {acc}")
                 accs.append(acc)
             epoch_loss = 0
             for data, target in self._train_loader:
-                data, target = CUDA(Variable(data)), CUDA(Variable(target))
+                data = TO_CUDA(Variable(data), self.device_id)
+                target = TO_CUDA(Variable(target), self.device_id)
                 self.optimizer.zero_grad()
                 predict_y = self.meta_model(data)
                 loss = self.criterion(predict_y, target)
@@ -133,9 +144,10 @@ class Worker(Process):
                         self._test_loader,
                         grad,
                         self.num_byzantine,
+                        self.device_id,
                     )
                     set_meta_model_flat_params(self.meta_model, params)
-                    set_grads(CUDA(self.meta_model), CUDA(grad))
+                    set_grads(TO_CUDA(self.meta_model, self.device_id), TO_CUDA(grad, self.device_id))
                     self.optimizer.step()
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
