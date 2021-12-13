@@ -21,6 +21,7 @@ class Average(PAR):
         test_loader,
         grad,
         b,
+        device_id,
     ):
         if len(params_list) == 0:
             return params

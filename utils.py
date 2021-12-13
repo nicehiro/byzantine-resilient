@@ -36,7 +36,7 @@ def count_vars(module):
 
 def TO_CUDA(var, id=0):
     """Turn var to cuda device if cuda is available."""
-    device = torch.cuda.device(f"cuda:{id}" if torch.cuda.is_available() else "cpu")
+    device = torch.device(f"cuda:{id}" if torch.cuda.is_available() else "cpu")
     return var.to(device)
 
 

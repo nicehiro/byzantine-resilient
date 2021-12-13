@@ -21,7 +21,16 @@ class QC(PAR):
         self.neighbors_n = 1 + len(neighbors)
         self.weights = [1 / self.neighbors_n] * (self.neighbors_n - 1)
 
-    def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
+    def par(
+        self,
+        params,
+        params_list: List[torch.Tensor],
+        model,
+        test_loader,
+        grad,
+        b,
+        device_id,
+    ):
         n = len(params_list)
         assert n >= b + 1, "The number of params should >= b + 1."
         params_n = params.shape[0]

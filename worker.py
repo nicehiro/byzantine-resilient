@@ -100,7 +100,9 @@ class Worker(Process):
         for epoch in range(self.epochs):
             if self.rank in self.test_ranks:
                 acc = meta_test(
-                    TO_CUDA(self.meta_model, self.device_id), self._test_loader, self.device_id
+                    TO_CUDA(self.meta_model, self.device_id),
+                    self._test_loader,
+                    self.device_id,
                 )
                 logging.critical(f"Epoch {epoch}\tRank {dist.get_rank()}\tAcc {acc}")
                 accs.append(acc)
@@ -109,7 +111,7 @@ class Worker(Process):
                 data = TO_CUDA(Variable(data), self.device_id)
                 target = TO_CUDA(Variable(target), self.device_id)
                 self.optimizer.zero_grad()
-                predict_y = self.meta_model(data)
+                predict_y = TO_CUDA(self.meta_model, self.device_id)(data)
                 loss = self.criterion(predict_y, target)
                 epoch_loss += loss.item()
                 # get current model's params
@@ -147,7 +149,10 @@ class Worker(Process):
                         self.device_id,
                     )
                     set_meta_model_flat_params(self.meta_model, params)
-                    set_grads(TO_CUDA(self.meta_model, self.device_id), TO_CUDA(grad, self.device_id))
+                    set_grads(
+                        TO_CUDA(self.meta_model, self.device_id),
+                        TO_CUDA(grad, self.device_id),
+                    )
                     self.optimizer.step()
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"

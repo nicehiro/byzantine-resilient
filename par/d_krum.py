@@ -18,7 +18,16 @@ class DKrum(PAR):
     def __init__(self, rank, neighbors, **args) -> None:
         super().__init__(rank, neighbors, **args)
 
-    def par(self, params, params_list: List[torch.Tensor], model, test_loader, grad, b):
+    def par(
+        self,
+        params,
+        params_list: List[torch.Tensor],
+        model,
+        test_loader,
+        grad,
+        b,
+        device_id,
+    ):
         n = len(params_list)
         # assert n >= 2 * b + 3, "Krum requirement: n >= 2b + 3."
         b = max(b, n // 2)
