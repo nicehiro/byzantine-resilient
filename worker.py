@@ -100,7 +100,7 @@ class Worker(Process):
         for epoch in range(self.epochs):
             if self.rank in self.test_ranks:
                 acc = meta_test(
-                    TO_CUDA(self.meta_model, self.device_id),
+                    self.meta_model,
                     self._test_loader,
                     self.device_id,
                 )
@@ -142,7 +142,7 @@ class Worker(Process):
                     params = self.par.par(
                         params,
                         params_list,
-                        self.meta_model.cpu(),
+                        self.meta_model,
                         self._test_loader,
                         grad,
                         self.num_byzantine,

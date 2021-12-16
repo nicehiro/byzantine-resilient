@@ -145,7 +145,7 @@ def meta_test(meta_model, test_loader, device_id):
     """Test the model."""
     correct = 0
     total = 0
-    meta_model.eval()
+    TO_CUDA(meta_model, device_id).eval()
     with torch.no_grad():
         for (images, labels) in test_loader:
             images = TO_CUDA(Variable(images), device_id)

@@ -30,7 +30,8 @@ class Zeno(PAR):
         b,
         device_id,
     ):
-        model = deepcopy(meta_model)
+        # model = deepcopy(meta_model)
+        model = meta_model
         # get score for each neighbor
         scores = []
         for i, neigh in enumerate(self.neighbors):
@@ -43,5 +44,6 @@ class Zeno(PAR):
         # average rest params, then update
         zeno_grads = [params_list[i] for i in sorted_index[b:]]
         zeno_grads.append(params)
-        all = torch.stack(zeno_grads, axis=1)
-        return torch.mean(all, axis=1)
+        all = torch.stack(zeno_grads, dim=1)
+        set_meta_model_flat_params(meta_model, params)
+        return torch.mean(all, dim=1)

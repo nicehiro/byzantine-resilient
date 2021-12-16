@@ -39,7 +39,8 @@ class MOZI(PAR):
         dist_choose_index = torch.argsort(torch.tensor(dist))[0:num_dist_choose]
         dist_choose = params_list[dist_choose_index]
         # select loss < \episilon neighbors by performance
-        model = deepcopy(meta_model)
+        # model = deepcopy(meta_model)
+        model = meta_model
 
         # get loss for each neighbor
         epsilon = 0.02
@@ -61,4 +62,5 @@ class MOZI(PAR):
             # use performance results as final res
             all = params_list[torch.tensor(perf_choose_index)]
             res = torch.cat((params.unsqueeze(0), all), dim=0)
+        set_meta_model_flat_params(meta_model, params)
         return res.mean(0)
