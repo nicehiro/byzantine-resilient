@@ -8,3 +8,4 @@ logs/
 *.dat
 *.csv
 *.eps
+.DS_Store
