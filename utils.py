@@ -1,8 +1,10 @@
 import os
+from typing import List
 from functools import reduce
 from operator import mul
 
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn
 from torch.autograd import Variable
@@ -156,3 +158,68 @@ def meta_test(meta_model, test_loader, device_id):
             correct += (predicted == labels).sum().item()
     meta_model.train()
     return correct / total
+
+
+def aggregate_acc(agg_rule, root_path: str, attacks: List[str], pars: List[str]):
+    """Aggregate acc csvs in root_path.
+
+    Directory structure:
+    root_path/
+    ----1/
+    --------attack-average/
+    ------------acc-0.csv
+    ------------...
+    ----2/
+    ...
+    """
+    # check root_path sub-directories
+    sub_directories = [f.path for f in os.scandir(root_path) if f.is_dir()]
+    # calc acc in sub-directory
+    csv_dir_paths = []
+    for attack in attacks:
+        for par in pars:
+            csv_dir_paths.append(f"{attack}-{par}")
+    res = {attack_par: [] for attack_par in csv_dir_paths}
+    for sub_directory in sub_directories:
+        # 1/
+        for csv_dir_path in csv_dir_paths:
+            # max-average/
+            csv_dir_abs_path = os.path.join(sub_directory, csv_dir_path)
+            csv_paths = os.listdir(csv_dir_abs_path)
+            csvs_list = []
+            non_zero_logs = []
+            for csv_path in csv_paths:
+                # acc-1.csv
+                csv = np.loadtxt(os.path.join(csv_dir_abs_path, csv_path))
+                if csv.size != 0:
+                    csvs_list.append(csv)
+                    non_zero_logs.append(csv_path)
+            csvs = pd.DataFrame.from_dict(dict(zip(non_zero_logs, csvs_list)))
+            min_acc = csvs.min(axis=1)
+            res[csv_dir_path].append(min_acc)
+    # aggregate
+    rets = {}
+    for attack_par, min_accs in res.items():
+        attack, par = attack_par.split("-")
+        rets[par] = agg_rule(pd.DataFrame(min_accs))
+    return rets
+
+
+if __name__ == '__main__':
+    agg_rule = pd.DataFrame.mean
+    t = "empire"
+    root_path = f"logs/mnist/{t}"
+    attacks = [t]
+    pars = [
+        "average",
+        "bridge",
+        "median",
+        "krum",
+        "bulyan",
+        "zeno",
+        "mozi",
+        "qc",
+    ]
+    agg_acc = aggregate_acc(agg_rule, root_path, attacks, pars)
+    res = pd.concat(agg_acc, axis=1)
+    res.to_csv(f"logs/mnist/{t}-04-05.csv")
