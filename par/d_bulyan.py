@@ -31,11 +31,12 @@ class DBulyan(PAR):
             return params
         n = len(params_list)
         # assert n >= 4 * b + 3, "The number of neighbors should >= 4b + 3."
-        b = int(min(b, math.floor(n / 2)))
+        num_selection = max(n - 2 * b - 2, 1)
+        krum_num_selection = max(n - b - 2, 1)
         params_copy = deepcopy(params_list)
         res = []
-        for i in range(n - 2 * b):
-            # use krum to select n - 2b params
+        for i in range(num_selection):
+            # use krum to select n - 2b - 2 params
             scores = []
             for i, p1 in enumerate(params_copy):
                 dists = []
@@ -45,15 +46,17 @@ class DBulyan(PAR):
                         dists.append(d)
                 sorted_index = torch.argsort(torch.tensor(dists), descending=False)
                 dists = torch.tensor(dists)
-                scores.append(dists[sorted_index[0 : n - b - 1]].sum())
+                scores.append(dists[sorted_index[0 : krum_num_selection]].sum())
             krum_index = torch.argsort(torch.tensor(scores), descending=False)
-            # remove current krun res
+            # remove current krum res
             krum_res = params_copy.pop(krum_index[0])
             res.append(krum_res)
-        if len(res) == 0:
-            return params
-        # use coordinate-wise median select 1 param
+        # select n - 4b - 2 closest params
+        final_num_selection = max(n - 4 * b - 2, 1)
         all = torch.stack(res, 1)
         m = torch.median(all, 1).values
-        res = torch.stack([m, params], 1)
+        coor_avg_index = torch.topk((all-m), final_num_selection, dim=1).indices
+        res = all[:, coor_avg_index]
+        # use coordinate-wise median select 1 param
+        res = torch.stack([res, params], 1)
         return torch.mean(res, 1)
