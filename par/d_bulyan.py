@@ -46,7 +46,7 @@ class DBulyan(PAR):
                         dists.append(d)
                 sorted_index = torch.argsort(torch.tensor(dists), descending=False)
                 dists = torch.tensor(dists)
-                scores.append(dists[sorted_index[0 : krum_num_selection]].sum())
+                scores.append(dists[sorted_index[0:krum_num_selection]].sum())
             krum_index = torch.argsort(torch.tensor(scores), descending=False)
             # remove current krum res
             krum_res = params_copy.pop(krum_index[0])
@@ -55,8 +55,10 @@ class DBulyan(PAR):
         final_num_selection = max(n - 4 * b - 2, 1)
         all = torch.stack(res, 1)
         m = torch.median(all, 1).values
-        coor_avg_index = torch.topk((all-m), final_num_selection, dim=1).indices
-        res = all[:, coor_avg_index]
+        coor_avg_index = torch.topk(
+            (all - m.unsqueeze(dim=1)), final_num_selection, dim=1
+        ).indices.squeeze()
+        res = torch.mean(all[coor_avg_index], dim=1).squeeze()
         # use coordinate-wise median select 1 param
         res = torch.stack([res, params], 1)
         return torch.mean(res, 1)
