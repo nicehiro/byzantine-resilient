@@ -201,25 +201,30 @@ def aggregate_acc(agg_rule, root_path: str, attacks: List[str], pars: List[str])
     rets = {}
     for attack_par, min_accs in res.items():
         attack, par = attack_par.split("-")
-        rets[par] = agg_rule(pd.DataFrame(min_accs))
+        rets[attack] = agg_rule(pd.DataFrame(min_accs))
     return rets
 
 
 if __name__ == '__main__':
     agg_rule = pd.DataFrame.mean
-    t = "empire"
-    root_path = f"logs/mnist/{t}"
-    attacks = [t]
-    pars = [
-        "average",
-        "bridge",
-        "median",
-        "krum",
-        "bulyan",
-        "zeno",
-        "mozi",
-        "qc",
-    ]
+    # t = "empire"
+    # root_path = f"logs/mnist/{t}"
+    # attacks = [t]
+    # pars = [
+    #     "average",
+    #     "bridge",
+    #     "median",
+    #     "krum",
+    #     "bulyan",
+    #     "zeno",
+    #     "mozi",
+    #     "qc",
+    # ]
+    t = "0.2-0.1"
+    root_path = f"logs/mnist/qc/{t}"
+    attacks = ["max", "gaussian", "hidden", "litter", "empire"]
+    pars = ["qc"]
     agg_acc = aggregate_acc(agg_rule, root_path, attacks, pars)
     res = pd.concat(agg_acc, axis=1)
-    res.to_csv(f"logs/mnist/{t}-04-05.csv")
+    res.to_csv(f"logs/mnist/qc-{t}.csv")
+    # res.to_csv(f"logs/mnist/{t}-04-05.csv")
