@@ -11,7 +11,7 @@ helpFunction() {
 
 dataset="MNIST"
 epochs=50
-basedir="mnist"
+basedir="mnist/qc"
 
 attacks=("gaussian" "max" "hidden" "litter" "empire")
 crs=(0.2 0.4 0.6)
@@ -23,18 +23,19 @@ len_att=${#attacks[@]}
 for ((i = 0; i < $len_cr; i++)); do
     for ((j = 0; j < $len_br; j++)); do
         for ((k = 0; k < $len_att; k++)); do
-            logdir="$basedir/qc-$attack-$crs-$brs"
             cr=${crs[i]}
             br=${brs[j]}
             attack=${attacks[k]}
+            mkdir -p "logs/$basedir/$cr-$br/"
+            logdir="$basedir/$cr-$br/$attack-qc"
             python train.py \
                 --epochs $epochs \
                 --dataset $dataset \
                 --batch_size 128 \
                 --nodes_n 30 \
-                --byzantine_ratio br \
-                --connection_ratio cr \
-                --attack attack \
+                --byzantine_ratio $br \
+                --connection_ratio $cr \
+                --attack $attack \
                 --par qc \
                 --logdir $logdir
 
