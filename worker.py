@@ -1,3 +1,4 @@
+import time
 import logging
 import os
 
@@ -98,6 +99,7 @@ class Worker(Process):
         dist.init_process_group(backend="gloo", rank=self.rank, world_size=self.size)
         accs = []
         for epoch in range(self.epochs):
+            train_time, aggegate_time = 0.0, 0.0
             if self.rank in self.test_ranks:
                 acc = meta_test(
                     self.meta_model,
@@ -108,12 +110,15 @@ class Worker(Process):
                 accs.append(acc)
             epoch_loss = 0
             for data, target in self._train_loader:
+                t1 = time.time()
                 data = TO_CUDA(Variable(data), self.device_id)
                 target = TO_CUDA(Variable(target), self.device_id)
                 self.optimizer.zero_grad()
                 predict_y = TO_CUDA(self.meta_model, self.device_id)(data)
                 loss = self.criterion(predict_y, target)
                 epoch_loss += loss.item()
+                t2 = time.time()
+                train_time += (t2 - t1) / 1000
                 # get current model's params
                 params = get_meta_model_flat_params(self.meta_model).cpu()
                 params_list = [torch.zeros_like(params) for _ in range(len(self.src))]
@@ -154,6 +159,11 @@ class Worker(Process):
                         TO_CUDA(grad, self.device_id),
                     )
                     self.optimizer.step()
+                    t3 = time.time()
+                    aggegate_time += (t3 - t2) / 1000
+            logging.critical(
+                f"Rank {dist.get_rank()}\tTrain Time{train_time}\tAgg Time{aggegate_time}"
+            )
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )
