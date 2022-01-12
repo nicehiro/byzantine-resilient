@@ -34,13 +34,15 @@ class QC(PAR):
         n = len(params_list)
         assert n >= b + 1, "The number of params should >= b + 1."
         params_n = params.shape[0]
-        epochs_n = max(params_n, 1000)
+        batch_size = min(params_n, 5120)
+        epochs_n = math.ceil(params_n / batch_size)
         step_size = 0.1
         for i in range(epochs_n):
+            s, e = batch_size * i, min(params_n, batch_size * (i + 1))
             rewards = {}
-            self_p = params[i]
+            self_p = params[s:e]
             for j in range(len(self.q)):
-                r_ij = math.exp(-1 * 1000 * abs(params_list[j][i] - self_p))
+                r_ij = math.exp(-1 * 1000 * abs((params_list[j][s:e] - self_p).mean()))
                 r_ij = self.weights[j] * r_ij
                 rewards[j] = r_ij
             sum_r = sum(rewards.values())
