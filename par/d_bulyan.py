@@ -26,6 +26,8 @@ class DBulyan(PAR):
         grad,
         b,
         device_id,
+        data,
+        target,
     ):
         if len(params_list) == 0:
             return params

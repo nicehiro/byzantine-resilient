@@ -144,6 +144,7 @@ class Worker(Process):
                 logging.info(f"Rank {self.rank} receive param {params_list}")
 
                 if self.attack is None:
+                    t3 = time.time()
                     params = self.par.par(
                         params,
                         params_list,
@@ -152,18 +153,20 @@ class Worker(Process):
                         grad,
                         self.num_byzantine,
                         self.device_id,
+                        data,
+                        target,
                     )
+                    t4 = time.time()
+                    aggegate_time += (t4 - t3) / 1000
                     set_meta_model_flat_params(self.meta_model, params)
                     set_grads(
                         TO_CUDA(self.meta_model, self.device_id),
                         TO_CUDA(grad, self.device_id),
                     )
                     self.optimizer.step()
-                    t3 = time.time()
-                    aggegate_time += (t3 - t2) / 1000
-            logging.critical(
-                f"Rank {dist.get_rank()}\tTrain Time{train_time}\tAgg Time{aggegate_time}"
-            )
+            # logging.critical(
+            #     f"Rank {dist.get_rank()}\tTrain Time{train_time}\tAgg Time{aggegate_time}"
+            # )
             logging.info(
                 f"Rank {dist.get_rank()}\tEpoch {epoch}\tLoss {epoch_loss/num_batches}"
             )

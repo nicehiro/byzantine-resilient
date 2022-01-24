@@ -8,6 +8,7 @@ import pandas as pd
 import torch
 from torch import nn
 from torch.autograd import Variable
+import torch.nn.functional as F
 from torch.utils.tensorboard.writer import SummaryWriter
 
 # writer = SummaryWriter(log_dir="logs/")
@@ -39,7 +40,8 @@ def count_vars(module):
 def TO_CUDA(var, id=0):
     """Turn var to cuda device if cuda is available."""
     device = torch.device(f"cuda:{id}" if torch.cuda.is_available() else "cpu")
-    return var.to(device)
+    # return var.to(device)
+    return var
 
 
 def get_meta_model_flat_params(model):
@@ -159,6 +161,17 @@ def meta_test(meta_model, test_loader, device_id):
     meta_model.train()
     return correct / total
 
+def meta_test_use_sample(meta_model, data, target, device_id):
+    """Test the model using data and target sampled from training loader.
+    """
+    data = TO_CUDA(Variable(data), device_id)
+    target = TO_CUDA(Variable(target), device_id)
+    TO_CUDA(meta_model, device_id).eval()
+    with torch.no_grad():
+        predict_y = meta_model(data)
+        loss = F.cross_entropy(predict_y, target)
+    meta_model.train()
+    return loss
 
 def aggregate_acc(agg_rule, root_path: str, attacks: List[str], pars: List[str]):
     """Aggregate acc csvs in root_path.

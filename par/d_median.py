@@ -22,6 +22,8 @@ class DMedian(PAR):
         grad,
         b,
         device_id,
+        data,
+        target,
     ):
         """
         Coordinate-wise median of n received params.

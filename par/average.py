@@ -26,6 +26,6 @@ class Average(PAR):
         if len(params_list) == 0:
             return params
         params_list.append(params)
-        all = torch.stack(params_list, axis=1)
-        m = torch.mean(all, axis=1)
+        all = torch.stack(params_list, dim=1)
+        m = torch.mean(all, dim=1)
         return m

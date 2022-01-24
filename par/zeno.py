@@ -4,7 +4,7 @@ from copy import deepcopy
 import torch
 
 from par.par import PAR
-from utils import meta_test, set_meta_model_flat_params
+from utils import meta_test, meta_test_use_sample, set_meta_model_flat_params
 
 
 class Zeno(PAR):
@@ -29,6 +29,8 @@ class Zeno(PAR):
         grad,
         b,
         device_id,
+        data,
+        target,
     ):
         # model = deepcopy(meta_model)
         model = meta_model
@@ -36,8 +38,9 @@ class Zeno(PAR):
         scores = []
         for i, neigh in enumerate(self.neighbors):
             set_meta_model_flat_params(model, params_list[i])
-            # if we need to gradient decsent on meta_model
-            score = meta_test(model, test_loader, device_id)
+            # score = meta_test(model, test_loader, device_id)
+            # score is negetive loss, positive accuracy
+            score = - meta_test_use_sample(model, data, target, device_id)
             scores.append(score)
         # sort scores, and delete b byzantine workers
         sorted_index = [x[0] for x in sorted(enumerate(scores), key=lambda x: x[1])]

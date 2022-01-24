@@ -30,6 +30,8 @@ class QC(PAR):
         grad,
         b,
         device_id,
+        data,
+        target,
     ):
         n = len(params_list)
         assert n >= b + 1, "The number of params should >= b + 1."
@@ -38,6 +40,7 @@ class QC(PAR):
         epochs_n = math.ceil(params_n / batch_size)
         step_size = 0.1
         for i in range(epochs_n):
+            step_size -= 0.001
             s, e = batch_size * i, min(params_n, batch_size * (i + 1))
             rewards = {}
             self_p = params[s:e]

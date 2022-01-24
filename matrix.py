@@ -97,13 +97,13 @@ def make_matrix(nodes_n, connect_probs, byzantine_probs, attack):
                 benigh_n = random.choice(non_byzantines)
             adj_i[benigh_n] = 1
         matrix.append(adj_i)
-    matrix = ensure_rooted(matrix, attack_matrix)
+    matrix = ensure_connected(matrix, attack_matrix)
     return matrix, attack_matrix
 
 
-def ensure_rooted(matrix: List[List], attacks: List):
-    # ensure matrix is rooted
-    # strong rooted
+def ensure_connected(matrix: List[List], attacks: List):
+    # ensure matrix is connected
+    # strongly connected graph
     sub_gs = []
     n = len(matrix)
     visited = {j: False for j in range(n)}
@@ -134,10 +134,10 @@ def ensure_rooted(matrix: List[List], attacks: List):
 
 
 if __name__ == "__main__":
-    m, a = make_matrix(nodes_n=5, connect_probs=0.1, byzantine_probs=0.5, attack="max")
+    m, a = make_matrix(nodes_n=10, connect_probs=0.1, byzantine_probs=0.5, attack="max")
     # m = [[0, 0, 0, 1, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1], [0, 1, 0, 0, 0], [0, 0, 0, 1, 0]]
     # a = [1, None, 1, None, None]
     print(m)
     print(a)
-    e_m = ensure_rooted(m, a)
+    e_m = ensure_connected(m, a)
     print(e_m)

@@ -25,6 +25,8 @@ class BRIDGE(PAR):
         grad,
         b,
         device_id,
+        data,
+        target,
     ):
         """
         The neighbor of this worker should > 2f+1.

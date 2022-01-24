@@ -27,6 +27,8 @@ class DKrum(PAR):
         grad,
         b,
         device_id,
+        data,
+        target,
     ):
         n = len(params_list)
         # assert n >= 2 * b + 3, "Krum requirement: n >= 2b + 3."

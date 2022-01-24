@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import List
 
 import torch
-from utils import meta_test, set_meta_model_flat_params
+from utils import meta_test, meta_test_use_sample, set_meta_model_flat_params
 
 from par.par import PAR
 
@@ -26,6 +26,8 @@ class MOZI(PAR):
         grad,
         b,
         device_id,
+        data,
+        target,
     ):
         rho = 0.5
         n = len(params_list)
@@ -47,11 +49,13 @@ class MOZI(PAR):
         perf_choose_index = []
         # self loss
         set_meta_model_flat_params(model, params)
-        self_loss = meta_test(model, test_loader, device_id)
+        # self_loss = meta_test(model, test_loader, device_id)
+        self_loss = meta_test_use_sample(model, data, target, device_id)
         # other loss
         for i in dist_choose_index:
             set_meta_model_flat_params(model, params_list[i])
-            loss = meta_test(model, test_loader, device_id)
+            # loss = meta_test(model, test_loader, device_id)
+            loss = meta_test_use_sample(model, data, target, device_id)
             if loss - self_loss < epsilon:
                 perf_choose_index.append(i)
         # update params

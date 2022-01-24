@@ -21,6 +21,8 @@ class PAR:
         grad,
         b,
         device_id,
+        data,
+        target,
     ):
         """Aggeregate params.
 
@@ -30,6 +32,8 @@ class PAR:
             model (nn.Module): test_model
             grad (torch.Tensor): self grad
             b (int): number of byzantine workers
+            data: traning loader sampled data
+            target: training loader sampled target
 
         Raises:
             NotImplementedError
