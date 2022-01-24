@@ -32,7 +32,7 @@ fi
 
 if [ $dataset = "MNIST" ]
 then
-    epochs=50
+    epochs=30
     basedir="mnist"
 else
     epochs=200
