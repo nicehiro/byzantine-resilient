@@ -8,12 +8,11 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-# matplotlib.use("Agg")
 sns.set(font="Times New Roman")
 
-SMALL_SIZE = 12
-MEDIUM_SIZE = 14
-BIGGER_SIZE = 16
+SMALL_SIZE = 14
+MEDIUM_SIZE = 16
+BIGGER_SIZE = 18
 
 plt.rc("font", size=SMALL_SIZE)  # controls default text sizes
 plt.rc("axes", titlesize=MEDIUM_SIZE)  # fontsize of the axes title
@@ -36,7 +35,7 @@ pars = [
     "qc",
 ]
 
-pars_label = {
+pars_label = [
     "Average",
     "BRIDGE",
     "Dmedian",
@@ -44,8 +43,8 @@ pars_label = {
     "DBulyan",
     "DZeno",
     "UBAR",
-    "QC",
-}
+    "CA-PAR",
+]
 
 attacks = [
     "max",
@@ -68,22 +67,29 @@ root_path = "logs/"
 # csv files
 paths = [
     [
-        "mnist/max-04-05.csv",
-        "mnist/gaussian-04-05.csv",
-        "mnist/hidden-04-05.csv",
-        "mnist/litter-04-05.csv",
-        "mnist/empire-04-05.csv",
+        "mnist/mean/max-04-05.csv",
+        "mnist/mean/gaussian-04-05.csv",
+        "mnist/mean/hidden-04-05.csv",
+        "mnist/mean/litter-04-05.csv",
+        "mnist/mean/empire-04-05.csv",
     ],
     [
-        "mnist/qc-0.2-0.1.csv",
-        "mnist/qc-0.2-0.3.csv",
-        "mnist/qc-0.2-0.5.csv",
-        "mnist/qc-0.4-0.1.csv",
-        "mnist/qc-0.4-0.3.csv",
-        "mnist/qc-0.4-0.5.csv",
-        "mnist/qc-0.6-0.1.csv",
-        "mnist/qc-0.6-0.3.csv",
-        "mnist/qc-0.6-0.5.csv",
+        "cifar/mean/max-04-05.csv",
+        "cifar/mean/gaussian-04-05.csv",
+        "cifar/mean/hidden-04-05.csv",
+        "cifar/mean/litter-04-05.csv",
+        "cifar/mean/empire-04-05.csv",
+    ],
+    [
+        "mnist/qc/qc-0.2-0.1.csv",
+        "mnist/qc/qc-0.2-0.3.csv",
+        "mnist/qc/qc-0.2-0.5.csv",
+        "mnist/qc/qc-0.4-0.1.csv",
+        "mnist/qc/qc-0.4-0.3.csv",
+        "mnist/qc/qc-0.4-0.5.csv",
+        "mnist/qc/qc-0.6-0.1.csv",
+        "mnist/qc/qc-0.6-0.3.csv",
+        "mnist/qc/qc-0.6-0.5.csv",
     ]
     # [
     #     "cifar/max-04-05.csv",
@@ -94,8 +100,28 @@ paths = [
     # ],
 ]
 
-markers = [""] * 7 + ["^"]
+markers = [""] * 7 + ["o"]
 alphas = [0.5] * 7 + [1.0]
+linestyle_tuple = [
+    ('solid', 'solid'),
+    ('dotted', 'dotted'),
+    ('dashed', 'dashed'),
+    ('dashdot', 'dashdot'),
+    ('loosely dotted',        (0, (1, 10))),
+    ('dotted',                (0, (1, 1))),
+    ('densely dotted',        (0, (1, 1))),
+
+    ('loosely dashed',        (0, (5, 10))),
+    ('dashed',                (0, (5, 5))),
+    ('densely dashed',        (0, (5, 1))),
+
+    ('loosely dashdotted',    (0, (3, 10, 1, 10))),
+    ('dashdotted',            (0, (3, 5, 1, 5))),
+    ('densely dashdotted',    (0, (3, 1, 1, 1))),
+
+    ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
+    ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
+    ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
 dark_color = [
     # "#B71C1C",
     "#4A148C",
@@ -105,7 +131,7 @@ dark_color = [
     "#2E7D32",
     "#9E9D24",
     "#EF6C00",
-    "blue",
+    "skyblue",
 ]
 
 def plot1():
@@ -159,7 +185,9 @@ def plot2(path):
         csv_path = os.path.join(root_path, path[i])
         d = pd.read_csv(csv_path, index_col=0)
         # axs[i][j].plot(d, color=tuple(dark_color), alpha=alphas, marker=markers)
-        r = d.plot(ax=axs[i], color=dark_color, legend=False, xlim=(0, 50), ylim=(0,1))
+        # r = d.plot(ax=axs[i], color=dark_color, legend=False, xlim=(0, 50), ylim=(0,1.0), marker=markers)
+        for j, par in enumerate(pars):
+            axs[i].plot(par, data=d, color=dark_color[j], marker=markers[j], ls=linestyle_tuple[j][1], markerfacecolor="blue", linewidth=2, markersize=4)
         axs[i].set_ylabel("Accuracy %")
         axs[i].set_xlabel("Epochs")
         axs[i].set_title(attacks_label[i])
@@ -194,17 +222,18 @@ def plot3(path):
         csv_path = os.path.join(root_path, path[i])
         d = pd.read_csv(csv_path, index_col=0)
         # axs[i][j].plot(d, color=tuple(dark_color), alpha=alphas, marker=markers)
-        r = d.plot(ax=axs[i], color=dark_color, legend=False, xlim=(0, 50), ylim=(0,1))
+        for j, attack in enumerate(attacks):
+            axs[i].plot(attack, data=d, color=dark_color[j], marker=markers[j], ls=linestyle_tuple[j][1], markerfacecolor="blue", linewidth=2, markersize=4)
         axs[i].set_ylabel("Accuracy %")
         axs[i].set_xlabel("Epochs")
         axs[i].set_title(f"cr: {cr} br: {br}")
 
     plt.subplots_adjust(left=0.065, right=0.98, bottom=0.12, top=0.95, wspace=0.29, hspace=0.39)
     fig.legend(labels=attacks_label, ncol=5, loc="lower center")
-    plt.savefig(f"{root_path}qc-mnist-acc.eps", format="eps")
+    # plt.savefig(f"{root_path}/mnist/qc/qc-mnist-acc.eps", format="eps")
     plt.show()
 
 
 if __name__ == '__main__':
-    # plot2(paths[0])
-    plot3(paths[1])
+    plot2(paths[0])
+    # plot3(paths[2])

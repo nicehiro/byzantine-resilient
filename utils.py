@@ -193,6 +193,8 @@ def aggregate_acc(agg_rule, root_path: str, attacks: List[str], pars: List[str])
         for par in pars:
             csv_dir_paths.append(f"{attack}-{par}")
     res = {attack_par: [] for attack_par in csv_dir_paths}
+    res_mean = {attack_par: [] for attack_par in csv_dir_paths}
+    res_std = {attack_par: [] for attack_par in csv_dir_paths}
     for sub_directory in sub_directories:
         # 1/
         for csv_dir_path in csv_dir_paths:
@@ -202,6 +204,8 @@ def aggregate_acc(agg_rule, root_path: str, attacks: List[str], pars: List[str])
             csvs_list = []
             non_zero_logs = []
             for csv_path in csv_paths:
+                if not csv_path.endswith(".csv"):
+                    continue
                 # acc-1.csv
                 csv = np.loadtxt(os.path.join(csv_dir_abs_path, csv_path))
                 if csv.size != 0:
@@ -209,35 +213,91 @@ def aggregate_acc(agg_rule, root_path: str, attacks: List[str], pars: List[str])
                     non_zero_logs.append(csv_path)
             csvs = pd.DataFrame.from_dict(dict(zip(non_zero_logs, csvs_list)))
             min_acc = csvs.min(axis=1)
+            mean_acc = csvs.mean(axis=1)
+            std_acc = csvs.std(axis=1)
             res[csv_dir_path].append(min_acc)
+            res_mean[csv_dir_path].append(mean_acc)
+            res_std[csv_dir_path].append(std_acc)
     # aggregate
-    rets = {}
+    rets, rets_mean, rets_std = {}, {}, {}
     for attack_par, min_accs in res.items():
         attack, par = attack_par.split("-")
-        rets[attack] = agg_rule(pd.DataFrame(min_accs))
-    return rets
+        rets[par] = agg_rule(pd.DataFrame(min_accs))
+
+    for attack_par, mean_accs in res_mean.items():
+        attack, par = attack_par.split("-")
+        rets_mean[par] = agg_rule(pd.DataFrame(mean_accs))
+
+    for attack_par, std_accs in res_std.items():
+        attack, par = attack_par.split("-")
+        rets_std[par] = agg_rule(pd.DataFrame(std_accs))
+    return rets, rets_mean, rets_std
 
 
 if __name__ == '__main__':
     agg_rule = pd.DataFrame.mean
-    # t = "empire"
-    # root_path = f"logs/mnist/{t}"
-    # attacks = [t]
-    # pars = [
-    #     "average",
-    #     "bridge",
-    #     "median",
-    #     "krum",
-    #     "bulyan",
-    #     "zeno",
-    #     "mozi",
-    #     "qc",
-    # ]
-    t = "0.2-0.1"
-    root_path = f"logs/mnist/qc/{t}"
-    attacks = ["max", "gaussian", "hidden", "litter", "empire"]
-    pars = ["qc"]
-    agg_acc = aggregate_acc(agg_rule, root_path, attacks, pars)
+
+    t = "hidden"
+    dataset = 'mnist'
+    root_path = f"logs/{dataset}/{t}"
+    attacks = [t]
+    pars = [
+        "average",
+        "bridge",
+        "median",
+        "krum",
+        "bulyan",
+        "zeno",
+        "mozi",
+        "qc",
+    ]
+    agg_acc, mean_agg, std_agg = aggregate_acc(agg_rule, root_path, attacks, pars)
     res = pd.concat(agg_acc, axis=1)
-    res.to_csv(f"logs/mnist/qc-{t}.csv")
-    # res.to_csv(f"logs/mnist/{t}-04-05.csv")
+    mean_res = pd.concat(mean_agg, axis=1)
+    std_res = pd.concat(std_agg, axis=1)
+    res.to_csv(f"logs/{dataset}/{t}-min-04-05.csv")
+    mean_res.to_csv(f"logs/{dataset}/{t}-mean-04-05.csv")
+    std_res.to_csv(f"logs/{dataset}/{t}-std-04-05.csv")
+
+    # cr_brs = [
+    #     "0.2-0.1",
+    #     "0.2-0.3",
+    #     "0.2-0.5",
+    #     "0.4-0.1",
+    #     "0.4-0.3",
+    #     "0.4-0.5",
+    #     "0.6-0.1",
+    #     "0.6-0.3",
+    #     "0.6-0.5",
+    # ]
+    # cr_brs = [
+    #     "0.1-0.5",
+    #     "0.2-0.5",
+    #     "0.3-0.5",
+    #     "0.4-0.5",
+    #     "0.5-0.5",
+    #     "0.6-0.5",
+    #     "0.7-0.5",
+    #     "0.8-0.5",
+    #     "0.9-0.5",
+    # ]
+    # cr_brs = [
+    #     "0.4-0.1",
+    #     "0.4-0.2",
+    #     "0.4-0.3",
+    #     "0.4-0.4",
+    #     "0.4-0.5",
+    #     "0.4-0.6",
+    #     "0.4-0.7",
+    #     "0.4-0.8",
+    #     "0.4-0.9",
+    # ]
+    # for cr_br in cr_brs:
+    #     root_path = f"logs/mnist/qc8/{cr_br}"
+    #     attacks = ["max", "gaussian", "hidden", "litter", "empire"]
+    #     # attacks = ["hidden", "gaussian"]
+    #     pars = ["qc"]
+    #     agg_acc = aggregate_acc(agg_rule, root_path, attacks, pars)
+    #     res = pd.concat(agg_acc, axis=1)
+    #     res.to_csv(f"logs/mnist/qc8/qc-{cr_br}.csv")
+
