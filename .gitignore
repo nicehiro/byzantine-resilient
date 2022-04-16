@@ -9,3 +9,5 @@ logs/
 *.csv
 *.eps
 .DS_Store
+.direnv/
+.envrc

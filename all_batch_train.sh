@@ -4,7 +4,7 @@ attacks=("max" "gaussian" "hidden" "litter" "empire")
 
 for attack in ${attacks[@]}
 do
-    bash batch_train.sh -d MNIST -b 0.2 -c 0.5 -a $attack
+    bash batch_train.sh -d MNIST -b 0.5 -c 0.4 -a $attack
 
     if [ $? -ne 0 ]
     then

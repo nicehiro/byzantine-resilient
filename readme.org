@@ -5,3 +5,15 @@
 - =topology.py= set topology
 - =worker.py= worker node to start a process to train the model
 - =*.sh= training scripts
+
+
+* Revision
+
+** =cr=0.4, br=0.5= centralized topology
+~make_centralized_matrix~
+
+**  =cr=0.2, br=0.1= sparse topology
+~cr, br~
+
+** =cr=0.4, br=0.5= noniid topology
+~split method~

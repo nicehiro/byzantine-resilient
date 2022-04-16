@@ -30,18 +30,18 @@ from attack import attacks
 #     [1, 1, 0, 0, 0, 0, 1, 0, 0, 0],
 # ]
 # topo satisfy n >= 2f + 3
-decentra_matrix = [
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 1, 0, 0, 1],
-    [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 1, 0, 1, 0, 0, 1],
-    [1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
-    [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-    [0, 1, 0, 1, 0, 0, 0, 1, 1, 1],
-    [0, 1, 0, 1, 1, 1, 1, 0, 1, 1],
-    [0, 1, 0, 1, 0, 1, 1, 0, 0, 1],
-    [1, 1, 0, 0, 1, 0, 1, 1, 0, 0],
-]
+# decentra_matrix = [
+#     [0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+#     [1, 0, 0, 1, 1, 0, 1, 0, 0, 1],
+#     [0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+#     [0, 1, 1, 0, 1, 0, 1, 0, 0, 1],
+#     [1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+#     [0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+#     [0, 1, 0, 1, 0, 0, 0, 1, 1, 1],
+#     [0, 1, 0, 1, 1, 1, 1, 0, 1, 1],
+#     [0, 1, 0, 1, 0, 1, 1, 0, 0, 1],
+#     [1, 1, 0, 0, 1, 0, 1, 1, 0, 0],
+# ]
 # topo satisfy n >= 4f + 3
 # decentra_matrix = [
 #     [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -55,6 +55,27 @@ decentra_matrix = [
 #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 #     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 # ]
+
+
+def make_centralized_matrix(nodes_n, byzantine_probs, attack):
+    """Generate centralized matrix.
+    
+    Args:
+        nodes_n: the number of nodes
+        byzantine_porbs: the probs of one node become byzantine node
+        attack: attack method
+    """
+    matrix = [[0] + [1] * (nodes_n-1)] + [
+        [1] + [0] * (nodes_n-1)
+        for i in range(nodes_n-1)
+    ]
+    attacks_matrix = [None]
+    for i in range(1, nodes_n):
+        if attack and random.random() < byzantine_probs:
+            attacks_matrix.append(attacks[attack]())
+        else:
+            attacks_matrix.append(None)
+    return matrix, attacks_matrix
 
 
 def make_matrix(nodes_n, connect_probs, byzantine_probs, attack):
@@ -134,10 +155,13 @@ def ensure_connected(matrix: List[List], attacks: List):
 
 
 if __name__ == "__main__":
-    m, a = make_matrix(nodes_n=10, connect_probs=0.1, byzantine_probs=0.5, attack="max")
+    # m, a = make_matrix(nodes_n=10, connect_probs=0.1, byzantine_probs=0.5, attack="max")
     # m = [[0, 0, 0, 1, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1], [0, 1, 0, 0, 0], [0, 0, 0, 1, 0]]
     # a = [1, None, 1, None, None]
+    # print(m)
+    # print(a)
+    # e_m = ensure_connected(m, a)
+    # print(e_m)
+    m, a = make_centralized_matrix(5, 0.4, "max")
     print(m)
     print(a)
-    e_m = ensure_connected(m, a)
-    print(e_m)

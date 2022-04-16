@@ -22,7 +22,7 @@ plt.rc("ytick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
 plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
 plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-matplotlib.use("Agg")
+# matplotlib.use("Agg")
 
 pars = [
     "average",
@@ -67,11 +67,11 @@ root_path = "logs/"
 # csv files
 paths = [
     [
-        "mnist/mean/max-04-05.csv",
-        "mnist/mean/gaussian-04-05.csv",
-        "mnist/mean/hidden-04-05.csv",
-        "mnist/mean/litter-04-05.csv",
-        "mnist/mean/empire-04-05.csv",
+        "mnist-noniid/mean/max-04-05.csv",
+        "mnist-noniid/mean/gaussian-04-05.csv",
+        "mnist-noniid/mean/hidden-04-05.csv",
+        "mnist-noniid/mean/litter-04-05.csv",
+        "mnist-noniid/mean/empire-04-05.csv",
     ],
     [
         "cifar/mean/max-04-05.csv",
@@ -230,8 +230,8 @@ def plot3(path):
 
     plt.subplots_adjust(left=0.065, right=0.98, bottom=0.12, top=0.95, wspace=0.29, hspace=0.39)
     fig.legend(labels=attacks_label, ncol=5, loc="lower center")
-    # plt.savefig(f"{root_path}/mnist/qc/qc-mnist-acc.eps", format="eps")
-    plt.show()
+    plt.savefig(f"{root_path}/mnist/qc/qc-mnist-acc.png", format="png")
+    # plt.show()
 
 
 if __name__ == '__main__':

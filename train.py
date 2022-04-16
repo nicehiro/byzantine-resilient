@@ -2,7 +2,8 @@ import argparse
 
 import torch
 
-from matrix import make_matrix
+
+from matrix import make_centralized_matrix, make_matrix
 from par import pars
 from par.average import Average
 from par.opdpg import OPDPG
@@ -36,12 +37,20 @@ if __name__ == "__main__":
     parser.add_argument("--logdir", type=str, default="test")
     args = parser.parse_args()
 
-    adj_matrix, attacks = make_matrix(
+    # centralized matrix
+    adj_matrix, attacks = make_centralized_matrix(
         nodes_n=args.nodes_n,
-        connect_probs=args.connection_ratio,
         byzantine_probs=args.byzantine_ratio,
         attack=args.attack,
     )
+
+    # decentralized matrix
+    # adj_matrix, attacks = make_matrix(
+    #     nodes_n=args.nodes_n,
+    #     connect_probs=args.connection_ratio,
+    #     byzantine_probs=args.byzantine_ratio,
+    #     attack=args.attack,
+    # )
     # adj_matrix = [[0, 1], [0, 0]]
     # attacks = [None, None]
     workers_n = args.nodes_n

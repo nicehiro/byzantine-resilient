@@ -9,7 +9,6 @@ import torch
 from torch import nn
 from torch.autograd import Variable
 import torch.nn.functional as F
-from torch.utils.tensorboard.writer import SummaryWriter
 
 # writer = SummaryWriter(log_dir="logs/")
 

@@ -1,5 +1,5 @@
 import torchvision
-from torch.utils.data import random_split
+from torch.utils.data import random_split, Subset
 from torch.utils.data.dataloader import DataLoader
 from torchvision import transforms
 
@@ -48,7 +48,7 @@ datasets = {
 }
 
 
-def split_dataset(dataset_name, workers_n):
+def split_dataset(dataset_name, workers_n, split_method=random_split):
     dataset = datasets[dataset_name](
         root="./data",
         train=True,
@@ -58,11 +58,48 @@ def split_dataset(dataset_name, workers_n):
     ave = len(dataset) // workers_n
     lengths = [ave] * (workers_n - 1)
     lengths.append(len(dataset) - ave * (workers_n - 1))
-    return random_split(dataset, lengths)
+    return split_method(dataset, lengths)
 
 
-def generate_dataloader(dataset_name, workers_n, batch_size=64):
-    sub_datasets = split_dataset(dataset_name, workers_n)
+def sequencial_split(dataset, lengths):
+    train_datasets = []
+    s = e = 0
+    for i in range(len(lengths)):
+        s = e
+        e += lengths[i]
+        train_dataset = Subset(dataset, range(s, e))
+        train_datasets.append(train_dataset)
+    return train_datasets
+
+
+def custom_split(dataset, lengths):
+
+    def convert_boolean_list_to_indices(boolean_list):
+        res = []
+        for i in range(len(boolean_list)):
+            if boolean_list[i]:
+                res.append(i)
+        return res
+
+    class_num = len(dataset.classes)
+    sorted_indices = []
+    # sort dataset with targets
+    for c in range(class_num):
+        boolean_list = dataset.targets == c
+        sorted_indices += convert_boolean_list_to_indices(boolean_list)
+    
+    train_datasets = []
+    s = e = 0
+    for i in range(len(lengths)):
+        s = e
+        e += lengths[i]
+        train_dataset = Subset(dataset, sorted_indices[s: e])
+        train_datasets.append(train_dataset)
+    return train_datasets
+
+
+def generate_dataloader(dataset_name, workers_n, batch_size=64, split_method=random_split):
+    sub_datasets = split_dataset(dataset_name, workers_n, split_method=split_method)
     train_loaders = [
         DataLoader(dataset, batch_size=batch_size, shuffle=True)
         for dataset in sub_datasets

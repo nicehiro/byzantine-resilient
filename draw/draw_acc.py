@@ -23,8 +23,8 @@ plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
 # matplotlib.use("Agg")
-attack = "hidden"
-root_path = f"logs/mnist/{attack}/by-5-1/"
+attack = "empire"
+root_path = f"logs/mnist-centralized/{attack}/1/"
 pars = [
     "average",
     "bridge",
