@@ -1,4 +1,4 @@
-from data import generate_dataloader, sequencial_split, custom_split
+from data import generate_dataloader, sequencial_split, non_iid_total_split, non_iid_custom_split
 from torch.utils.data import random_split
 from par.par import PAR
 from worker import Worker
@@ -18,7 +18,7 @@ class Topology:
 
     def build_topo(self, dataset, batch_size, args):
         train_loaders, test_loader = generate_dataloader(
-            dataset, self.size, batch_size=batch_size, split_method=random_split
+            dataset, self.size, batch_size=batch_size, split_method=non_iid_custom_split
         )
         # init worker
         for rank in range(self.size):

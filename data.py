@@ -1,3 +1,4 @@
+import math
 import torchvision
 from torch.utils.data import random_split, Subset
 from torch.utils.data.dataloader import DataLoader
@@ -72,7 +73,7 @@ def sequencial_split(dataset, lengths):
     return train_datasets
 
 
-def custom_split(dataset, lengths):
+def non_iid_total_split(dataset, lengths):
 
     def convert_boolean_list_to_indices(boolean_list):
         res = []
@@ -98,6 +99,40 @@ def custom_split(dataset, lengths):
     return train_datasets
 
 
+def non_iid_custom_split(dataset, lengths, iid_ratio=0.9):
+
+    def convert_boolean_list_to_indices(boolean_list, non_iid_start):
+        res = []
+        for i in range(len(boolean_list)):
+            if boolean_list[i]:
+                res.append(i + non_iid_start)
+        return res
+
+    class_num = len(dataset.classes)
+    sorted_indices = []
+    l = len(dataset)
+    non_iid_start = math.ceil(l * iid_ratio)
+    # sort dataset with targets
+    for c in range(class_num):
+        boolean_list = dataset.targets[non_iid_start:] == c
+        sorted_indices += convert_boolean_list_to_indices(boolean_list, non_iid_start)
+    
+    iid_indices = [i for i in range(math.floor(l * iid_ratio))]
+    
+    train_datasets = []
+    s1 = e1 = 0
+    s2 = e2 = 0
+    for i in range(len(lengths)):
+        s1 = e1
+        s2 = e2
+        iid_length = math.ceil(lengths[i] * iid_ratio)
+        e1 += iid_length
+        e2 += lengths[i] - iid_length
+        train_dataset = Subset(dataset, iid_indices[s1: e1] + sorted_indices[s2: e2])
+        train_datasets.append(train_dataset)
+    return train_datasets
+
+
 def generate_dataloader(dataset_name, workers_n, batch_size=64, split_method=random_split):
     sub_datasets = split_dataset(dataset_name, workers_n, split_method=split_method)
     train_loaders = [
@@ -115,4 +150,4 @@ def generate_dataloader(dataset_name, workers_n, batch_size=64, split_method=ran
 
 
 if __name__ == "__main__":
-    test = split_dataset("MNIST", 10)
+    test = split_dataset("MNIST", 10, split_method=non_iid_custom_split)

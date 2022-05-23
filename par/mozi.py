@@ -51,6 +51,8 @@ class MOZI(PAR):
         set_meta_model_flat_params(model, params)
         # self_loss = meta_test(model, test_loader, device_id)
         self_loss = meta_test_use_sample(model, data, target, device_id)
+        if len(dist_choose_index) == 0:
+            return params
         # other loss
         for i in dist_choose_index:
             set_meta_model_flat_params(model, params_list[i])

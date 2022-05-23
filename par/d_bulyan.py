@@ -59,8 +59,8 @@ class DBulyan(PAR):
         m = torch.median(all, 1).values
         coor_avg_index = torch.topk(
             (all - m.unsqueeze(dim=1)), final_num_selection, dim=1
-        ).indices.squeeze()
-        res = torch.mean(all[coor_avg_index], dim=1).squeeze()
+        ).indices
+        res = torch.mean(torch.gather(all, 1, coor_avg_index), dim=1).squeeze()
         # use coordinate-wise median select 1 param
         res = torch.stack([res, params], 1)
         return torch.mean(res, 1)

@@ -154,6 +154,12 @@ def ensure_connected(matrix: List[List], attacks: List):
     return matrix
 
 
+def ensure_rooted(matrix: List[List], attacks: List):
+    """works for future
+    """
+    pass
+
+
 if __name__ == "__main__":
     # m, a = make_matrix(nodes_n=10, connect_probs=0.1, byzantine_probs=0.5, attack="max")
     # m = [[0, 0, 0, 1, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1], [0, 1, 0, 0, 0], [0, 0, 0, 1, 0]]
